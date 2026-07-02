@@ -1,0 +1,127 @@
+AI ATS Project Master Specification
+
+Goal
+
+Build a production-style Applicant Tracking System using: - Next.js
+(JavaScript) - PostgreSQL - pgvector (embeddings) - Gemini/OpenAI
+compatible APIs (free tiers) - JWT auth
+
+Development Rule
+
+Implement ONE phase at a time. Never start a later phase until the
+previous one is complete and tested.
+
+------------------------------------------------------------------------
+
+Phase 1 - Project Setup
+
+Objectives: - Initialize Next.js project. - Configure PostgreSQL. -
+Configure pgvector. - Environment variables. - Authentication
+scaffolding. Deliverables: - Working app. - Login/Register pages. -
+Database connection.
+
+------------------------------------------------------------------------
+
+Phase 2 - Authentication
+
+Roles: 1. Candidate 2. Recruiter 3. Admin
+
+Requirements: - Register/Login - JWT/session - Password hashing -
+Role-based route protection
+
+------------------------------------------------------------------------
+
+Phase 3 - Database Design
+
+Create normalized schema for: Users Candidates Recruiters Companies Jobs
+Applications Skills CandidateSkills Projects Education Experience
+Certifications Resumes Embeddings Notifications InterviewSchedules
+AuditLogs
+
+Document every table and relationship before coding.
+
+------------------------------------------------------------------------
+
+Phase 4 - Recruiter Workflow
+
+Recruiter: Create company Create job Edit job Publish job View
+applicants Search candidates Rank candidates Shortlist Reject Schedule
+interviews Send emails Analytics dashboard
+
+Explain every page before implementation.
+
+------------------------------------------------------------------------
+
+Phase 5 - Candidate Workflow
+
+Candidate: Register Complete profile Upload resume AI parsing Profile
+auto-fill Resume score Apply to jobs Track status Interview schedule
+Receive notifications Resume improvement suggestions
+
+------------------------------------------------------------------------
+
+Phase 6 - Resume Upload Pipeline
+
+Workflow: Upload PDF/DOCX Validate file Store file Extract text Clean
+text Call LLM Return structured JSON Store JSON Generate embedding Store
+embedding in pgvector
+
+The parser must extract: Name Email Phone Location Summary Skills
+Experience Education Projects Certifications Languages
+
+Handle malformed resumes gracefully.
+
+------------------------------------------------------------------------
+
+Phase 7 - AI Features
+
+Resume summary Skill extraction Semantic JD matching Missing skills
+Resume improvement Candidate ranking Recruiter AI chat Natural-language
+search
+
+For every AI feature define: Input Prompt Output JSON schema Validation
+Fallback behavior
+
+------------------------------------------------------------------------
+
+Phase 8 - Semantic Matching
+
+Create embeddings for: Resume Job description
+
+Store vectors.
+
+Similarity: Cosine similarity.
+
+Ranking combines: Semantic similarity Required skill coverage Preferred
+skill coverage Experience Education
+
+Document scoring formula before coding.
+
+------------------------------------------------------------------------
+
+Phase 9 - Dashboards
+
+Recruiter: Applications Status Skill distribution Hiring funnel Top
+candidates
+
+Candidate: Resume score Applications Interview status Suggestions
+
+------------------------------------------------------------------------
+
+Phase 10 - Notifications
+
+Application received Shortlisted Rejected Interview scheduled Offer
+
+------------------------------------------------------------------------
+
+Global Coding Rules
+
+Before every feature: 1. Explain objective. 2. Explain folder structure.
+3. Explain DB changes. 4. Explain API endpoints. 5. Explain UI. 6. Then
+implement. 7. Then test. 8. Then proceed.
+
+Never skip documentation.
+
+Always keep code modular.
+
+Never generate the whole project in one step.
