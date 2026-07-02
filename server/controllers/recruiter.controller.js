@@ -1,4 +1,6 @@
 import * as recruiterService from '../services/recruiter.service.js';
+import * as jobService from '../services/job.service.js';
+import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
   try {
@@ -9,10 +11,21 @@ export const getDashboardStats = async (req, res, next) => {
   }
 };
 
+// Job Management Handlers
 export const getJobs = async (req, res, next) => {
   try {
-    const data = await recruiterService.getJobs(req.user.id);
-    return res.status(200).json({ success: true, data });
+    const queryParams = jobQuerySchema.parse(req.query);
+    const result = await jobService.listJobs(req.user.id, queryParams);
+    return res.status(200).json({ success: true, data: result.jobs, pagination: result.pagination });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getJobById = async (req, res, next) => {
+  try {
+    const job = await jobService.getJobById(req.params.id);
+    return res.status(200).json({ success: true, data: job });
   } catch (error) {
     next(error);
   }
@@ -20,13 +33,70 @@ export const getJobs = async (req, res, next) => {
 
 export const createJob = async (req, res, next) => {
   try {
-    const job = await recruiterService.postJob(req.user.id, req.body);
-    return res.status(201).json({ success: true, message: 'Job opening created successfully', data: job });
+    const validatedData = createJobSchema.parse(req.body);
+    const job = await jobService.createJob(req.user.id, validatedData);
+    return res.status(201).json({ success: true, message: 'Job created successfully', data: job });
+  } catch (error) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.errors.map((e) => ({ field: e.path.join('.'), message: e.message })),
+      });
+    }
+    next(error);
+  }
+};
+
+export const updateJob = async (req, res, next) => {
+  try {
+    const validatedData = updateJobSchema.parse(req.body);
+    const updated = await jobService.updateJob(req.params.id, validatedData);
+    return res.status(200).json({ success: true, message: 'Job updated successfully', data: updated });
+  } catch (error) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.errors.map((e) => ({ field: e.path.join('.'), message: e.message })),
+      });
+    }
+    next(error);
+  }
+};
+
+export const updateJobStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    if (!['DRAFT', 'OPEN', 'CLOSED', 'ARCHIVED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value' });
+    }
+    const updated = await jobService.updateJobStatus(req.params.id, status);
+    return res.status(200).json({ success: true, message: `Job status updated to ${status}`, data: updated });
   } catch (error) {
     next(error);
   }
 };
 
+export const duplicateJob = async (req, res, next) => {
+  try {
+    const duplicated = await jobService.duplicateJob(req.params.id, req.user.id);
+    return res.status(201).json({ success: true, message: 'Job duplicated successfully', data: duplicated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteJob = async (req, res, next) => {
+  try {
+    await jobService.deleteJob(req.params.id);
+    return res.status(200).json({ success: true, message: 'Job deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Application Pipeline Handlers
 export const getApplications = async (req, res, next) => {
   try {
     const data = await recruiterService.getApplications(req.user.id);
