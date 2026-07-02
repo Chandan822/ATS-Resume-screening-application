@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as candidateController from '../controllers/candidate.controller.js';
+import * as appController from '../controllers/application.controller.js';
 import { authenticateJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -77,5 +78,15 @@ router.post('/resumes', upload.single('resume'), candidateController.uploadResum
 router.post('/resumes/:id/parse-ai', candidateController.parseResumeAI);
 router.post('/resumes/:id/score', candidateController.scoreResume);
 router.delete('/resumes/:id', candidateController.deleteResume);
+
+// Candidate Applications Workflow
+router.post('/applications', appController.applyToJob);
+router.get('/applications', appController.getMyApplications);
+router.delete('/applications/:id', appController.withdrawApplication);
+
+// Candidate Saved Jobs
+router.post('/saved-jobs/:jobId', appController.saveJob);
+router.delete('/saved-jobs/:jobId', appController.unsaveJob);
+router.get('/saved-jobs', appController.getSavedJobs);
 
 export default router;

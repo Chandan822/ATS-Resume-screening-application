@@ -105,6 +105,38 @@ export const candidateService = {
     const response = await apiClient.post(`/candidate/resumes/${resumeFileId}/score`);
     return response.data;
   },
+
+  // Candidate Applications Workflow
+  async applyToJob(jobId) {
+    const response = await apiClient.post('/candidate/applications', { jobId });
+    return response.data;
+  },
+
+  async getMyApplications() {
+    const response = await apiClient.get('/candidate/applications');
+    return response.data;
+  },
+
+  async withdrawApplication(id) {
+    const response = await apiClient.delete(`/candidate/applications/${id}`);
+    return response.data;
+  },
+
+  // Saved Jobs
+  async saveJob(jobId) {
+    const response = await apiClient.post(`/candidate/saved-jobs/${jobId}`);
+    return response.data;
+  },
+
+  async unsaveJob(jobId) {
+    const response = await apiClient.delete(`/candidate/saved-jobs/${jobId}`);
+    return response.data;
+  },
+
+  async getSavedJobs() {
+    const response = await apiClient.get('/candidate/saved-jobs');
+    return response.data;
+  },
 };
 
 export default candidateService;
