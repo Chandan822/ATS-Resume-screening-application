@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import env from './config/env.js';
 import healthRoutes from './routes/health.routes.js';
+import authRoutes from './routes/auth.routes.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Register Routes
 app.use('/api', healthRoutes);
+app.use('/api/auth', authRoutes);
 
 // Catch 404 and Global Error Handlers
 app.use(notFoundHandler);
