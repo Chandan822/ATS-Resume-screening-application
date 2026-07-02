@@ -4,6 +4,7 @@ import * as semanticService from '../services/semanticMatcher.service.js';
 import * as questionService from '../services/questionGenerator.service.js';
 import * as feedbackService from '../services/feedbackAnalyzer.service.js';
 import * as biasService from '../services/biasDetector.service.js';
+import * as sourcingService from '../services/talentSourcing.service.js';
 import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
@@ -271,6 +272,20 @@ export const analyzeJobDescriptionBias = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'Job description analyzed for inclusive language & bias successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Automated Talent Sourcing & Candidate Recommendations Handler
+export const recommendCandidatesForJob = async (req, res, next) => {
+  try {
+    const result = await sourcingService.recommendCandidatesForJob(req.params.id);
+    return res.status(200).json({
+      success: true,
+      message: 'Automated candidate recommendations generated from talent pool database successfully',
       data: result,
     });
   } catch (error) {

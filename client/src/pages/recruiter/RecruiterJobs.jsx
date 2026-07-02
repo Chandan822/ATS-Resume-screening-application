@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
 import InclusiveJobEditor from '../../components/InclusiveJobEditor';
+import CandidateRecommendationModal from '../../components/CandidateRecommendationModal';
 import {
   Briefcase,
   Plus,
@@ -20,6 +21,7 @@ import {
   ChevronRight,
   Sparkles,
   ShieldCheck,
+  UserCheck,
 } from 'lucide-react';
 
 export function RecruiterJobs() {
@@ -37,6 +39,7 @@ export function RecruiterJobs() {
   // Modals state
   const [showModal, setShowModal] = useState(false);
   const [showBiasScannerModal, setShowBiasScannerModal] = useState(false);
+  const [recommendationModalJob, setRecommendationModalJob] = useState(null);
   const [editingJob, setEditingJob] = useState(null);
 
   // Form State covering all 12 job fields
@@ -79,10 +82,13 @@ export function RecruiterJobs() {
   // Mutations
   const createJobMut = useMutation({
     mutationFn: (payload) => recruiterService.createJob(payload),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(['recruiterJobs']);
       queryClient.invalidateQueries(['recruiterStats']);
       closeModal();
+      if (data.data) {
+        setRecommendationModalJob(data.data);
+      }
     },
   });
 
@@ -336,7 +342,16 @@ export function RecruiterJobs() {
                 </div>
 
                 {/* Quick Action Controls */}
-                <div className="grid grid-cols-5 gap-1 pt-1 border-t border-slate-100">
+                <div className="grid grid-cols-6 gap-1 pt-1 border-t border-slate-100">
+                  {/* Auto-Sourcing Candidate Recommendations */}
+                  <button
+                    onClick={() => setRecommendationModalJob(job)}
+                    className="p-2 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 transition flex flex-col items-center justify-center text-[10px] font-bold col-span-2"
+                    title="Auto-Sourced Candidate Recommendations"
+                  >
+                    <Sparkles className="w-4 h-4 mb-0.5 text-purple-600" /> Auto-Source
+                  </button>
+
                   {/* Publish / Open */}
                   {job.status !== 'OPEN' ? (
                     <button
@@ -372,15 +387,6 @@ export function RecruiterJobs() {
                     title="Duplicate Job Requisition"
                   >
                     <Copy className="w-4 h-4 mb-0.5" /> Clone
-                  </button>
-
-                  {/* Archive */}
-                  <button
-                    onClick={() => statusMut.mutate({ id: job.id, status: 'ARCHIVED' })}
-                    className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex flex-col items-center justify-center text-[10px] font-bold"
-                    title="Archive Job"
-                  >
-                    <Archive className="w-4 h-4 mb-0.5" /> Archive
                   </button>
 
                   {/* Delete */}
@@ -647,6 +653,14 @@ export function RecruiterJobs() {
             />
           </div>
         </div>
+      )}
+      {/* MODAL: AUTOMATED TALENT POOL SOURCING RECOMMENDATIONS */}
+      {recommendationModalJob && (
+        <CandidateRecommendationModal
+          jobId={recommendationModalJob.id}
+          jobTitle={recommendationModalJob.title}
+          onClose={() => setRecommendationModalJob(null)}
+        />
       )}
     </div>
   );

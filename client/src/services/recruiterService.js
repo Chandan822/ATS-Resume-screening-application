@@ -88,6 +88,11 @@ export const recruiterService = {
     const response = await apiClient.post('/recruiter/jobs/analyze-bias', { text });
     return response.data;
   },
+
+  async getJobRecommendations(jobId) {
+    const response = await apiClient.get(`/recruiter/jobs/${jobId}/recommendations`);
+    return response.data;
+  },
 };
 
 export default recruiterService;
