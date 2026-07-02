@@ -1,4 +1,6 @@
 import express from 'express';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -9,15 +11,24 @@ import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import candidateRoutes from './routes/candidate.routes.js';
 import recruiterRoutes from './routes/recruiter.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import { initSocketServer } from './services/notification.service.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new SocketIOServer(server, {
+  cors: { origin: env.CORS_ORIGIN, credentials: true },
+});
+initSocketServer(io);
 
 // Security and Logging Middlewares
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
@@ -31,6 +42,7 @@ app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/candidate', candidateRoutes);
 app.use('/api/recruiter', recruiterRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Catch 404 and Global Error Handlers
 app.use(notFoundHandler);
@@ -38,8 +50,9 @@ app.use(errorHandler);
 
 // Start Server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(env.PORT, () => {
+  server.listen(env.PORT, () => {
     console.log(`🚀 [AI ATS Server] Server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+    console.log(`📡 [Socket.io WebSocket] Real-time gateway listening on port ${env.PORT}`);
     console.log(`📡 [Health Check] Available at http://localhost:${env.PORT}/api/health`);
   });
 }
