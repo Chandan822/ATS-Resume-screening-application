@@ -1,6 +1,7 @@
 import * as candidateRepo from '../repositories/candidate.repository.js';
 import { extractResumeText } from '../utils/resumeExtractor.js';
 import { parseResumeTextWithAI } from './aiParser.service.js';
+import { calculateAtsScore } from '../utils/atsScorer.js';
 
 /**
  * Calculate Candidate Profile Completion Percentage (0-100%)
@@ -215,5 +216,25 @@ export const parseResumeWithAI = async (userId, resumeFileId) => {
     resumeFileId,
     resumeVersionId: resumeVersion.id,
     parsedData: structuredData,
+  };
+};
+
+export const scoreResume = async (userId, resumeFileId) => {
+  const candidate = await candidateRepo.findCandidateByUserId(userId);
+  const resumeVersion = await candidateRepo.findLatestResumeVersion(resumeFileId, candidate.id);
+
+  if (!resumeVersion) {
+    const error = new Error('Resume file or version record not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Calculate ATS Score breakdown
+  const scoringResult = calculateAtsScore(resumeVersion.parsedText, resumeVersion.parsedData || {});
+
+  return {
+    resumeFileId,
+    resumeVersionId: resumeVersion.id,
+    ...scoringResult,
   };
 };

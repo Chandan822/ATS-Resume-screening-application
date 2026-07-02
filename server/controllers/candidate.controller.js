@@ -254,3 +254,16 @@ export const parseResumeAI = async (req, res, next) => {
     next(error);
   }
 };
+
+export const scoreResume = async (req, res, next) => {
+  try {
+    const result = await candidateService.scoreResume(req.user.id, req.params.id);
+    return res.status(200).json({
+      success: true,
+      message: 'ATS Resume score calculated successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

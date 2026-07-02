@@ -100,6 +100,11 @@ export const candidateService = {
     const response = await apiClient.post(`/candidate/resumes/${resumeFileId}/parse-ai`);
     return response.data;
   },
+
+  async scoreResume(resumeFileId) {
+    const response = await apiClient.post(`/candidate/resumes/${resumeFileId}/score`);
+    return response.data;
+  },
 };
 
 export default candidateService;

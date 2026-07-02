@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { candidateService } from '../../services/candidateService';
+import AtsScoreDashboard from '../../components/AtsScoreDashboard';
 import {
   User,
   Briefcase,
@@ -169,6 +170,10 @@ export function CandidateProfile() {
   const parseAiMut = useMutation({
     mutationFn: (resumeFileId) => candidateService.parseResumeAI(resumeFileId),
     onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+  });
+
+  const scoreMut = useMutation({
+    mutationFn: (resumeFileId) => candidateService.scoreResume(resumeFileId),
   });
 
   if (isLoading) {
@@ -763,12 +768,20 @@ export function CandidateProfile() {
 
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => scoreMut.mutate(resFile.id)}
+                          disabled={scoreMut.isPending}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
+                        >
+                          <Award className="w-3.5 h-3.5" />
+                          {scoreMut.isPending ? 'Scoring...' : 'Calculate ATS Score'}
+                        </button>
+                        <button
                           onClick={() => parseAiMut.mutate(resFile.id)}
                           disabled={parseAiMut.isPending}
                           className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          {parseAiMut.isPending ? 'Parsing with AI...' : 'Parse with AI'}
+                          {parseAiMut.isPending ? 'Parsing...' : 'Parse with AI'}
                         </button>
                         <button
                           onClick={() => deleteResumeMut.mutate(resFile.id)}
@@ -778,6 +791,11 @@ export function CandidateProfile() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Render ATS Score Dashboard if calculated for this resume */}
+                    {scoreMut.data?.data?.resumeFileId === resFile.id && (
+                      <AtsScoreDashboard scoreData={scoreMut.data.data} />
+                    )}
 
                     {/* Render AI Parsed Result JSON if available */}
                     {parseAiMut.data?.data?.parsedData && (
