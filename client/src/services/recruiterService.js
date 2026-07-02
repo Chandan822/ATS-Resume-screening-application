@@ -82,6 +82,12 @@ export const recruiterService = {
     const response = await apiClient.get(`/recruiter/interviews/${roundId}/feedback`);
     return response.data;
   },
+
+  // Real-time Bias & Inclusivity Analyzer Method
+  async analyzeJobBias(text) {
+    const response = await apiClient.post('/recruiter/jobs/analyze-bias', { text });
+    return response.data;
+  },
 };
 
 export default recruiterService;

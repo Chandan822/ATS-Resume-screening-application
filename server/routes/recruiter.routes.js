@@ -14,6 +14,7 @@ router.get('/dashboard/stats', recruiterController.getDashboardStats);
 // Job Management Endpoints
 router.get('/jobs', recruiterController.getJobs);
 router.post('/jobs', recruiterController.createJob);
+router.post('/jobs/analyze-bias', recruiterController.analyzeJobDescriptionBias);
 router.get('/jobs/:id', recruiterController.getJobById);
 router.put('/jobs/:id', recruiterController.updateJob);
 router.patch('/jobs/:id/status', recruiterController.updateJobStatus);

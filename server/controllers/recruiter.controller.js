@@ -3,6 +3,7 @@ import * as jobService from '../services/job.service.js';
 import * as semanticService from '../services/semanticMatcher.service.js';
 import * as questionService from '../services/questionGenerator.service.js';
 import * as feedbackService from '../services/feedbackAnalyzer.service.js';
+import * as biasService from '../services/biasDetector.service.js';
 import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
@@ -256,6 +257,21 @@ export const getInterviewFeedback = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: feedbackList,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Real-time Bias & Inclusivity Analyzer Handler
+export const analyzeJobDescriptionBias = async (req, res, next) => {
+  try {
+    const { text } = req.body;
+    const result = await biasService.analyzeJobDescriptionBias(text || '');
+    return res.status(200).json({
+      success: true,
+      message: 'Job description analyzed for inclusive language & bias successfully',
+      data: result,
     });
   } catch (error) {
     next(error);

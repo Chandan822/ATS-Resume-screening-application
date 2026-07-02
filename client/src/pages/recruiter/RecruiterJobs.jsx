@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
+import InclusiveJobEditor from '../../components/InclusiveJobEditor';
 import {
   Briefcase,
   Plus,
@@ -18,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 
 export function RecruiterJobs() {
@@ -34,6 +36,7 @@ export function RecruiterJobs() {
 
   // Modals state
   const [showModal, setShowModal] = useState(false);
+  const [showBiasScannerModal, setShowBiasScannerModal] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
 
   // Form State covering all 12 job fields
@@ -471,7 +474,16 @@ export function RecruiterJobs() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700">Job Description *</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700">Job Description *</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowBiasScannerModal(true)}
+                    className="text-indigo-600 hover:text-indigo-800 font-bold text-[11px] inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-xl transition"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" /> DE&I Bias Scanner
+                  </button>
+                </div>
                 <textarea
                   rows={3}
                   required
@@ -616,6 +628,23 @@ export function RecruiterJobs() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL: REAL-TIME BIAS & INCLUSIVITY SCANNER */}
+      {showBiasScannerModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-4xl w-full relative my-8">
+            <button
+              onClick={() => setShowBiasScannerModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 rounded-xl"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <InclusiveJobEditor
+              initialText={form.description}
+              onTextChange={(newText) => setForm({ ...form, description: newText })}
+            />
           </div>
         </div>
       )}
