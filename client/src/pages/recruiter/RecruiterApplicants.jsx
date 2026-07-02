@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
-import { Users, Mail, RefreshCw } from 'lucide-react';
+import InterviewQuestionGenerator from '../../components/InterviewQuestionGenerator';
+import { Users, Mail, RefreshCw, Sparkles, X } from 'lucide-react';
 
 export function RecruiterApplicants() {
   const queryClient = useQueryClient();
   const [filterStage, setFilterStage] = useState('ALL');
+  const [selectedAppForQuestions, setSelectedAppForQuestions] = useState(null);
 
   const { data: apps, isLoading, isError, refetch } = useQuery({
     queryKey: ['recruiterApps'],
@@ -124,18 +126,27 @@ export function RecruiterApplicants() {
                     </span>
                   </td>
                   <td className="py-3.5 text-right">
-                    <select
-                      value={app.status}
-                      onChange={(e) => updateStageMut.mutate({ id: app.id, status: e.target.value })}
-                      className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-600"
-                    >
-                      <option value="APPLIED">Applied</option>
-                      <option value="SCREENING">Screening</option>
-                      <option value="INTERVIEW">Interview</option>
-                      <option value="OFFERED">Offered</option>
-                      <option value="HIRED">Hired</option>
-                      <option value="REJECTED">Rejected</option>
-                    </select>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setSelectedAppForQuestions(app)}
+                        className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold flex items-center gap-1 transition"
+                        title="Generate AI Interview Questions"
+                      >
+                        <Sparkles className="w-3 h-3" /> Questions
+                      </button>
+                      <select
+                        value={app.status}
+                        onChange={(e) => updateStageMut.mutate({ id: app.id, status: e.target.value })}
+                        className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-600"
+                      >
+                        <option value="APPLIED">Applied</option>
+                        <option value="SCREENING">Screening</option>
+                        <option value="INTERVIEW">Interview</option>
+                        <option value="OFFERED">Offered</option>
+                        <option value="HIRED">Hired</option>
+                        <option value="REJECTED">Rejected</option>
+                      </select>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -143,6 +154,25 @@ export function RecruiterApplicants() {
           </table>
         </div>
       </div>
+
+      {/* MODAL: AI QUESTION GENERATOR & EDITOR */}
+      {selectedAppForQuestions && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-4xl w-full relative my-8">
+            <button
+              onClick={() => setSelectedAppForQuestions(null)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 rounded-xl"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <InterviewQuestionGenerator
+              candidateName={`${selectedAppForQuestions.candidate?.user?.firstName || 'Candidate'} ${selectedAppForQuestions.candidate?.user?.lastName || ''}`}
+              jobTitle={selectedAppForQuestions.job?.title || 'Job Opening'}
+              roundId={selectedAppForQuestions.id}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

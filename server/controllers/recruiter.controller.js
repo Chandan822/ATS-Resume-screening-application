@@ -1,6 +1,7 @@
 import * as recruiterService from '../services/recruiter.service.js';
 import * as jobService from '../services/job.service.js';
 import * as semanticService from '../services/semanticMatcher.service.js';
+import * as questionService from '../services/questionGenerator.service.js';
 import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
@@ -158,6 +159,54 @@ export const getSingleCandidateMatch = async (req, res, next) => {
       success: true,
       message: 'Candidate match breakdown calculated successfully',
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// AI Interview Question Generator Handlers
+export const generateInterviewQuestions = async (req, res, next) => {
+  try {
+    const { resumeText, jobDescription, candidateExperience, candidateName, jobTitle } = req.body;
+    const questions = await questionService.generateInterviewQuestions({
+      resumeText,
+      jobDescription,
+      candidateExperience,
+      candidateName,
+      jobTitle,
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'AI interview questions generated successfully',
+      data: questions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const saveInterviewQuestions = async (req, res, next) => {
+  try {
+    const { roundId } = req.params;
+    const result = await questionService.saveInterviewQuestions(roundId, req.body);
+    return res.status(200).json({
+      success: true,
+      message: 'Interview question kit saved successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getInterviewQuestions = async (req, res, next) => {
+  try {
+    const { roundId } = req.params;
+    const questions = await questionService.getInterviewQuestions(roundId);
+    return res.status(200).json({
+      success: true,
+      data: questions,
     });
   } catch (error) {
     next(error);

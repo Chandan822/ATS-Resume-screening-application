@@ -472,6 +472,7 @@ model InterviewRound {
   durationMinutes Int             @default(45)
   locationOrLink  String?
   status          InterviewStatus @default(SCHEDULED)
+  questions       Json?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 

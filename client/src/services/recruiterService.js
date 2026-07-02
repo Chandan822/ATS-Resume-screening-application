@@ -50,6 +50,22 @@ export const recruiterService = {
     const response = await apiClient.put(`/recruiter/applications/${id}/status`, { status });
     return response.data;
   },
+
+  // AI Interview Question Generator Methods
+  async generateInterviewQuestions(data) {
+    const response = await apiClient.post('/recruiter/interviews/generate-questions', data);
+    return response.data;
+  },
+
+  async saveInterviewQuestions(roundId, questionKit) {
+    const response = await apiClient.post(`/recruiter/interviews/${roundId}/questions`, questionKit);
+    return response.data;
+  },
+
+  async getInterviewQuestions(roundId) {
+    const response = await apiClient.get(`/recruiter/interviews/${roundId}/questions`);
+    return response.data;
+  },
 };
 
 export default recruiterService;

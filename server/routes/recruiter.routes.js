@@ -26,6 +26,11 @@ router.post('/resumes/:id/embeddings', recruiterController.generateResumeEmbeddi
 router.get('/jobs/:id/matches', recruiterController.getJobCandidateMatches);
 router.post('/jobs/:id/match-candidate/:candidateId', recruiterController.getSingleCandidateMatch);
 
+// AI Interview Question Generator Endpoints
+router.post('/interviews/generate-questions', recruiterController.generateInterviewQuestions);
+router.post('/interviews/:roundId/questions', recruiterController.saveInterviewQuestions);
+router.get('/interviews/:roundId/questions', recruiterController.getInterviewQuestions);
+
 // Applicant Pipeline Endpoints
 router.get('/applications', recruiterController.getApplications);
 router.put('/applications/:id/status', recruiterController.updateApplicationStatus);
