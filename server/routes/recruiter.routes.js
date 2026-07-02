@@ -20,6 +20,12 @@ router.patch('/jobs/:id/status', recruiterController.updateJobStatus);
 router.post('/jobs/:id/duplicate', recruiterController.duplicateJob);
 router.delete('/jobs/:id', recruiterController.deleteJob);
 
+// Semantic Matching & Candidate Ranking Endpoints
+router.post('/jobs/:id/embeddings', recruiterController.generateJobEmbedding);
+router.post('/resumes/:id/embeddings', recruiterController.generateResumeEmbedding);
+router.get('/jobs/:id/matches', recruiterController.getJobCandidateMatches);
+router.post('/jobs/:id/match-candidate/:candidateId', recruiterController.getSingleCandidateMatch);
+
 // Applicant Pipeline Endpoints
 router.get('/applications', recruiterController.getApplications);
 router.put('/applications/:id/status', recruiterController.updateApplicationStatus);

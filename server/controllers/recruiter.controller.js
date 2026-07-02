@@ -1,5 +1,6 @@
 import * as recruiterService from '../services/recruiter.service.js';
 import * as jobService from '../services/job.service.js';
+import * as semanticService from '../services/semanticMatcher.service.js';
 import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
@@ -111,6 +112,53 @@ export const updateApplicationStatus = async (req, res, next) => {
     const { status } = req.body;
     const result = await recruiterService.updateApplicationStatus(req.params.id, status);
     return res.status(200).json({ success: true, message: 'Application status updated', data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Semantic Matching & Vector Search Endpoints
+export const generateJobEmbedding = async (req, res, next) => {
+  try {
+    const result = await semanticService.storeJobEmbedding(req.params.id);
+    return res.status(201).json({ success: true, message: 'Job embedding generated and stored', data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateResumeEmbedding = async (req, res, next) => {
+  try {
+    const { candidateId } = req.body;
+    const result = await semanticService.storeResumeEmbedding(req.params.id, candidateId);
+    return res.status(201).json({ success: true, message: 'Resume embedding generated and stored', data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getJobCandidateMatches = async (req, res, next) => {
+  try {
+    const rankings = await semanticService.rankCandidatesForJob(req.params.id);
+    return res.status(200).json({
+      success: true,
+      message: 'Candidate rankings calculated using vector similarity & composite scoring',
+      data: rankings,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSingleCandidateMatch = async (req, res, next) => {
+  try {
+    const { id: jobId, candidateId } = req.params;
+    const result = await semanticService.matchCandidateToJob(candidateId, jobId);
+    return res.status(200).json({
+      success: true,
+      message: 'Candidate match breakdown calculated successfully',
+      data: result,
+    });
   } catch (error) {
     next(error);
   }
