@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { candidateService } from '../../services/candidateService';
 import AtsScoreDashboard from '../../components/AtsScoreDashboard';
 import ResumeComparisonView from './ResumeComparisonView';
+import SocialIntegrationModal from '../../components/SocialIntegrationModal';
 import {
   User,
   Briefcase,
@@ -28,7 +29,8 @@ import {
 
 export function CandidateProfile() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('overview'); // overview | education | experience | projects | skills | certificates | resumes
+  const [activeTab, setActiveTab] = useState('profile');
+  const [showSocialModal, setShowSocialModal] = useState(false); // overview | education | experience | projects | skills | certificates | resumes
 
   // Modals state
   const [showEduModal, setShowEduModal] = useState(false);
@@ -232,11 +234,16 @@ export function CandidateProfile() {
 
           {/* Completion Progress Bar */}
           <div className="w-full md:w-64 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-slate-700 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Profile Completion
-              </span>
-              <span className="text-indigo-600">{completionScore}%</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setShowSocialModal(true)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs inline-flex items-center gap-2 transition shadow-sm"
+              >
+                <Github className="w-4 h-4 text-white" /> Connect GitHub & LinkedIn
+              </button>
+              <div className="px-4 py-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-600" /> Completion: {completionScore}%
+              </div>
             </div>
             <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
               <div
@@ -1143,6 +1150,8 @@ export function CandidateProfile() {
           </div>
         </div>
       )}
+      {/* MODAL: EXPLICIT PERMISSION GITHUB & LINKEDIN INTEGRATION */}
+      {showSocialModal && <SocialIntegrationModal onClose={() => setShowSocialModal(false)} />}
     </div>
   );
 }

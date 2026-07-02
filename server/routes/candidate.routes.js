@@ -90,4 +90,9 @@ router.post('/saved-jobs/:jobId', appController.saveJob);
 router.delete('/saved-jobs/:jobId', appController.unsaveJob);
 router.get('/saved-jobs', appController.getSavedJobs);
 
+// GitHub & LinkedIn Integration Endpoints
+router.post('/integrations/github', candidateController.fetchGitHubIntegration);
+router.post('/integrations/linkedin', candidateController.fetchLinkedInIntegration);
+router.post('/integrations/sync-merge', candidateController.syncMergeSocialProfile);
+
 export default router;

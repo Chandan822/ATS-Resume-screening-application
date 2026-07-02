@@ -144,6 +144,22 @@ export const candidateService = {
     const response = await apiClient.get('/candidate/saved-jobs');
     return response.data;
   },
+
+  // GitHub & LinkedIn Integration Methods
+  async fetchGitHubIntegration(username, grantPermission = true) {
+    const response = await apiClient.post('/candidate/integrations/github', { username, grantPermission });
+    return response.data;
+  },
+
+  async fetchLinkedInIntegration(linkedinUrl, grantPermission = true) {
+    const response = await apiClient.post('/candidate/integrations/linkedin', { linkedinUrl, grantPermission });
+    return response.data;
+  },
+
+  async syncMergeSocialProfile(githubData, linkedinData) {
+    const response = await apiClient.post('/candidate/integrations/sync-merge', { githubData, linkedinData });
+    return response.data;
+  },
 };
 
 export default candidateService;

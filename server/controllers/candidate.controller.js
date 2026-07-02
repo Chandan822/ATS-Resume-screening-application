@@ -1,4 +1,5 @@
 import * as candidateService from '../services/candidate.service.js';
+import * as socialService from '../services/socialIntegration.service.js';
 import {
   updateProfileSchema,
   educationSchema,
@@ -274,6 +275,58 @@ export const compareResumes = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'Comparative analysis generated successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GitHub & LinkedIn Integration Handlers
+export const fetchGitHubIntegration = async (req, res, next) => {
+  try {
+    const { username, grantPermission } = req.body;
+    if (!grantPermission) {
+      return res.status(403).json({ success: false, message: 'Explicit user permission consent is required to fetch GitHub data.' });
+    }
+    const result = await socialService.fetchGitHubData(username);
+    return res.status(200).json({
+      success: true,
+      message: 'GitHub profile, repositories, languages, and contribution stats fetched successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const fetchLinkedInIntegration = async (req, res, next) => {
+  try {
+    const { linkedinUrl, grantPermission } = req.body;
+    if (!grantPermission) {
+      return res.status(403).json({ success: false, message: 'Explicit user permission consent is required to fetch LinkedIn profile data.' });
+    }
+    const result = await socialService.fetchLinkedInData(linkedinUrl);
+    return res.status(200).json({
+      success: true,
+      message: 'LinkedIn profile headline, experiences, educations, and skills fetched successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const syncMergeSocialProfile = async (req, res, next) => {
+  try {
+    const { githubData, linkedinData } = req.body;
+    const result = await socialService.mergeSocialDataToCandidateProfile(req.user.id, {
+      githubData,
+      linkedinData,
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'Social profile data merged into candidate database profile successfully',
       data: result,
     });
   } catch (error) {
