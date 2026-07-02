@@ -1,5 +1,6 @@
 import * as candidateRepo from '../repositories/candidate.repository.js';
 import { extractResumeText } from '../utils/resumeExtractor.js';
+import { parseResumeTextWithAI } from './aiParser.service.js';
 
 /**
  * Calculate Candidate Profile Completion Percentage (0-100%)
@@ -187,4 +188,32 @@ export const removeResumeFile = async (userId, resumeId) => {
   const candidate = await candidateRepo.findCandidateByUserId(userId);
   await candidateRepo.deleteResumeFileRecord(resumeId, candidate.id);
   return { message: 'Resume deleted successfully' };
+};
+
+export const parseResumeWithAI = async (userId, resumeFileId) => {
+  const candidate = await candidateRepo.findCandidateByUserId(userId);
+  const resumeVersion = await candidateRepo.findLatestResumeVersion(resumeFileId, candidate.id);
+
+  if (!resumeVersion) {
+    const error = new Error('Resume file or version record not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Parse structured JSON using Gemini API with retry and fallback
+  const structuredData = await parseResumeTextWithAI(resumeVersion.parsedText);
+
+  // Store JSON in ResumeVersion.parsedData
+  await candidateRepo.updateResumeVersionParsedData(resumeVersion.id, structuredData);
+
+  // Auto-fill candidate summary & headline if missing
+  if (structuredData.summary && (!candidate.summary || candidate.summary.trim() === '')) {
+    await candidateRepo.updateCandidateProfile(candidate.id, { summary: structuredData.summary });
+  }
+
+  return {
+    resumeFileId,
+    resumeVersionId: resumeVersion.id,
+    parsedData: structuredData,
+  };
 };

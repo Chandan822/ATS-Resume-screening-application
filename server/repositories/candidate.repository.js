@@ -220,7 +220,6 @@ export const createResumeFileRecord = async (candidateId, fileName, fileUrl, fil
 };
 
 export const createResumeVersionRecord = async (resumeFileId, candidateId, parsedText) => {
-  // Find current max version number for candidate
   const lastVersion = await prisma.resumeVersion.findFirst({
     where: { candidateId },
     orderBy: { versionNumber: 'desc' },
@@ -235,6 +234,20 @@ export const createResumeVersionRecord = async (resumeFileId, candidateId, parse
       versionNumber: nextVersionNumber,
       parsedText,
     },
+  });
+};
+
+export const updateResumeVersionParsedData = async (resumeVersionId, parsedData) => {
+  return prisma.resumeVersion.update({
+    where: { id: resumeVersionId },
+    data: { parsedData },
+  });
+};
+
+export const findLatestResumeVersion = async (resumeFileId, candidateId) => {
+  return prisma.resumeVersion.findFirst({
+    where: { resumeFileId, candidateId },
+    orderBy: { createdAt: 'desc' },
   });
 };
 

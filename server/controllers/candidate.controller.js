@@ -241,3 +241,16 @@ export const deleteResume = async (req, res, next) => {
     next(error);
   }
 };
+
+export const parseResumeAI = async (req, res, next) => {
+  try {
+    const result = await candidateService.parseResumeWithAI(req.user.id, req.params.id);
+    return res.status(200).json({
+      success: true,
+      message: 'Resume parsed into structured JSON successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

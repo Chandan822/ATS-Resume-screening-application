@@ -95,6 +95,11 @@ export const candidateService = {
     const response = await apiClient.delete(`/candidate/resumes/${id}`);
     return response.data;
   },
+
+  async parseResumeAI(resumeFileId) {
+    const response = await apiClient.post(`/candidate/resumes/${resumeFileId}/parse-ai`);
+    return response.data;
+  },
 };
 
 export default candidateService;

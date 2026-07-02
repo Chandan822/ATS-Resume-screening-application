@@ -72,8 +72,9 @@ router.delete('/skills/:id', candidateController.deleteSkill);
 router.post('/certificates', candidateController.addCertificate);
 router.delete('/certificates/:id', candidateController.deleteCertificate);
 
-// Resume Upload
+// Resume Upload & AI Parsing
 router.post('/resumes', upload.single('resume'), candidateController.uploadResume);
+router.post('/resumes/:id/parse-ai', candidateController.parseResumeAI);
 router.delete('/resumes/:id', candidateController.deleteResume);
 
 export default router;

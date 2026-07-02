@@ -166,6 +166,11 @@ export function CandidateProfile() {
     onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
   });
 
+  const parseAiMut = useMutation({
+    mutationFn: (resumeFileId) => candidateService.parseResumeAI(resumeFileId),
+    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center text-slate-500">
@@ -732,34 +737,93 @@ export function CandidateProfile() {
             )}
 
             {/* Resumes List */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {candidate.resumeFiles?.length === 0 ? (
                 <p className="text-xs text-slate-500 py-4">No resume files uploaded yet.</p>
               ) : (
                 candidate.resumeFiles?.map((resFile) => (
-                  <div key={resFile.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4 text-xs">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-6 h-6 text-indigo-600 shrink-0" />
-                      <div>
-                        <h4 className="font-bold text-slate-900 flex items-center gap-2">
-                          {resFile.fileName}
-                          {resFile.isPrimary && (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
-                              Primary
-                            </span>
-                          )}
-                        </h4>
-                        <p className="text-[11px] text-slate-400">
-                          {(resFile.fileSize / 1024).toFixed(1)} KB &bull; Uploaded {new Date(resFile.createdAt).toLocaleDateString()}
-                        </p>
+                  <div key={resFile.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 text-xs">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-6 h-6 text-indigo-600 shrink-0" />
+                        <div>
+                          <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                            {resFile.fileName}
+                            {resFile.isPrimary && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                                Primary
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            {(resFile.fileSize / 1024).toFixed(1)} KB &bull; Uploaded {new Date(resFile.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => parseAiMut.mutate(resFile.id)}
+                          disabled={parseAiMut.isPending}
+                          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {parseAiMut.isPending ? 'Parsing with AI...' : 'Parse with AI'}
+                        </button>
+                        <button
+                          onClick={() => deleteResumeMut.mutate(resFile.id)}
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    <button
-                      onClick={() => deleteResumeMut.mutate(resFile.id)}
-                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+
+                    {/* Render AI Parsed Result JSON if available */}
+                    {parseAiMut.data?.data?.parsedData && (
+                      <div className="p-4 rounded-xl bg-white border border-indigo-200 space-y-3">
+                        <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+                          <span className="font-extrabold text-indigo-950 flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-indigo-600" /> AI Parsed Resume JSON Output
+                          </span>
+                          <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">
+                            Gemini / Structured Engine
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                          <div>
+                            <span className="text-slate-400 block font-medium">Extracted Name</span>
+                            <span className="font-bold text-slate-800">{parseAiMut.data.data.parsedData.name || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block font-medium">Extracted Email</span>
+                            <span className="font-bold text-slate-800">{parseAiMut.data.data.parsedData.email || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block font-medium">Extracted Phone</span>
+                            <span className="font-bold text-slate-800">{parseAiMut.data.data.parsedData.phone || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block font-medium">Location</span>
+                            <span className="font-bold text-slate-800">{parseAiMut.data.data.parsedData.location || 'N/A'}</span>
+                          </div>
+                        </div>
+
+                        {parseAiMut.data.data.parsedData.skills?.length > 0 && (
+                          <div>
+                            <span className="text-slate-500 font-bold block mb-1">Extracted Skills Taxonomy</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {parseAiMut.data.data.parsedData.skills.map((s, idx) => (
+                                <span key={idx} className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold text-[10px]">
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
