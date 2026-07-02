@@ -5,6 +5,7 @@ import * as questionService from '../services/questionGenerator.service.js';
 import * as feedbackService from '../services/feedbackAnalyzer.service.js';
 import * as biasService from '../services/biasDetector.service.js';
 import * as sourcingService from '../services/talentSourcing.service.js';
+import * as analyticsService from '../services/analytics.service.js';
 import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
@@ -287,6 +288,20 @@ export const recommendCandidatesForJob = async (req, res, next) => {
       success: true,
       message: 'Automated candidate recommendations generated from talent pool database successfully',
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Executive Recruitment Analytics Overview Handler
+export const getRecruitmentAnalytics = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getRecruitmentAnalytics();
+    return res.status(200).json({
+      success: true,
+      message: 'Recruitment analytics overview dataset fetched successfully',
+      data,
     });
   } catch (error) {
     next(error);
