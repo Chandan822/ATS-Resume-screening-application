@@ -8,6 +8,7 @@ import env from './config/env.js';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import candidateRoutes from './routes/candidate.routes.js';
+import recruiterRoutes from './routes/recruiter.routes.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,6 +30,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/candidate', candidateRoutes);
+app.use('/api/recruiter', recruiterRoutes);
 
 // Catch 404 and Global Error Handlers
 app.use(notFoundHandler);

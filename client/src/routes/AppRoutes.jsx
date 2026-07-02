@@ -7,6 +7,14 @@ import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
 import Unauthorized from '../pages/Unauthorized';
 import CandidateProfile from '../pages/candidate/CandidateProfile';
+
+// Recruiter Pages
+import RecruiterDashboard from '../pages/recruiter/RecruiterDashboard';
+import RecruiterJobs from '../pages/recruiter/RecruiterJobs';
+import RecruiterApplicants from '../pages/recruiter/RecruiterApplicants';
+import RecruiterAnalytics from '../pages/recruiter/RecruiterAnalytics';
+import RecruiterCompanies from '../pages/recruiter/RecruiterCompanies';
+
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -22,7 +30,7 @@ export const AppRoutes = () => {
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/status" element={<App />} />
 
-      {/* Dashboard Protected Routes */}
+      {/* Main Dashboard Protected Routes */}
       <Route
         path="/dashboard"
         element={
@@ -31,17 +39,19 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<CandidateProfile />} />
+        <Route index element={<RecruiterDashboard />} />
+        <Route path="recruiter" element={<RecruiterDashboard />} />
         <Route path="profile" element={<CandidateProfile />} />
-        <Route path="jobs" element={<App />} />
-        <Route path="candidates" element={<App />} />
-        <Route path="applications" element={<App />} />
-        <Route path="interviews" element={<App />} />
-        <Route path="analytics" element={<App />} />
+        <Route path="jobs" element={<RecruiterJobs />} />
+        <Route path="candidates" element={<RecruiterApplicants />} />
+        <Route path="applications" element={<RecruiterApplicants />} />
+        <Route path="interviews" element={<RecruiterApplicants />} />
+        <Route path="analytics" element={<RecruiterAnalytics />} />
+        <Route path="companies" element={<RecruiterCompanies />} />
         <Route path="settings" element={<CandidateProfile />} />
       </Route>
 
-      {/* Candidate Profile Routes */}
+      {/* Candidate Dedicated Profile Routes */}
       <Route
         path="/candidate/*"
         element={
@@ -52,6 +62,22 @@ export const AppRoutes = () => {
       >
         <Route index element={<CandidateProfile />} />
         <Route path="profile" element={<CandidateProfile />} />
+      </Route>
+
+      {/* Recruiter Dedicated Routes */}
+      <Route
+        path="/recruiter/*"
+        element={
+          <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<RecruiterDashboard />} />
+        <Route path="jobs" element={<RecruiterJobs />} />
+        <Route path="applicants" element={<RecruiterApplicants />} />
+        <Route path="analytics" element={<RecruiterAnalytics />} />
+        <Route path="companies" element={<RecruiterCompanies />} />
       </Route>
     </Routes>
   );
