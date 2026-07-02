@@ -6,6 +6,7 @@ import Register from '../pages/Register';
 import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
 import Unauthorized from '../pages/Unauthorized';
+import CandidateProfile from '../pages/candidate/CandidateProfile';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -21,7 +22,7 @@ export const AppRoutes = () => {
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/status" element={<App />} />
 
-      {/* Reusable Dashboard Layout Shell */}
+      {/* Dashboard Protected Routes */}
       <Route
         path="/dashboard"
         element={
@@ -30,13 +31,27 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<App />} />
+        <Route index element={<CandidateProfile />} />
+        <Route path="profile" element={<CandidateProfile />} />
         <Route path="jobs" element={<App />} />
         <Route path="candidates" element={<App />} />
         <Route path="applications" element={<App />} />
         <Route path="interviews" element={<App />} />
         <Route path="analytics" element={<App />} />
-        <Route path="settings" element={<App />} />
+        <Route path="settings" element={<CandidateProfile />} />
+      </Route>
+
+      {/* Candidate Profile Routes */}
+      <Route
+        path="/candidate/*"
+        element={
+          <ProtectedRoute allowedRoles={['CANDIDATE', 'ADMIN']}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<CandidateProfile />} />
+        <Route path="profile" element={<CandidateProfile />} />
       </Route>
     </Routes>
   );
