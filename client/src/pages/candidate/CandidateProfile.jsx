@@ -691,17 +691,20 @@ export function CandidateProfile() {
         {activeTab === 'resumes' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="font-bold text-base text-slate-900">Uploaded Resume Files</h3>
+              <h3 className="font-bold text-base text-slate-900">Uploaded Resume Files & Extracted Text Pipeline</h3>
             </div>
 
             {/* Dropzone Upload */}
             <label className="flex flex-col items-center justify-center p-8 rounded-3xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition cursor-pointer text-center space-y-2">
               <UploadCloud className="w-8 h-8 text-indigo-600" />
-              <span className="text-xs font-bold text-indigo-900">Click to upload or drag & drop resume PDF / DOCX</span>
-              <span className="text-[11px] text-slate-500">Max file size 10MB</span>
+              <span className="text-xs font-bold text-indigo-900">
+                {uploadResumeMut.isPending ? 'Processing & Extracting Text...' : 'Click to upload or drag & drop resume PDF / DOCX'}
+              </span>
+              <span className="text-[11px] text-slate-500">Supported Formats: .pdf, .docx (Max 10MB)</span>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
+                disabled={uploadResumeMut.isPending}
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
                     uploadResumeMut.mutate(e.target.files[0]);
@@ -710,6 +713,23 @@ export function CandidateProfile() {
                 className="hidden"
               />
             </label>
+
+            {/* Extracted Text Result Banner if uploaded */}
+            {uploadResumeMut.data && (
+              <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Text Extraction Successful
+                  </span>
+                  <span className="text-[11px] font-semibold text-indigo-700">
+                    {uploadResumeMut.data.data?.wordCount || 0} Words &bull; {uploadResumeMut.data.data?.charCount || 0} Characters
+                  </span>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-indigo-100 max-h-48 overflow-y-auto text-[11px] text-slate-700 font-mono leading-relaxed whitespace-pre-wrap">
+                  {uploadResumeMut.data.data?.extractedText || 'No text extracted.'}
+                </div>
+              </div>
+            )}
 
             {/* Resumes List */}
             <div className="space-y-3">

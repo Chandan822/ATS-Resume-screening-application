@@ -1,4 +1,5 @@
 import * as candidateRepo from '../repositories/candidate.repository.js';
+import { extractResumeText } from '../utils/resumeExtractor.js';
 
 /**
  * Calculate Candidate Profile Completion Percentage (0-100%)
@@ -147,7 +148,39 @@ export const removeCertificate = async (userId, certificateId) => {
 export const uploadResumeFile = async (userId, file) => {
   const candidate = await candidateRepo.findCandidateByUserId(userId);
   const fileUrl = `/uploads/${file.filename}`;
-  return candidateRepo.createResumeFileRecord(candidate.id, file.originalname, fileUrl, file.mimetype, file.size);
+
+  // 1. Extract and clean raw text from PDF or DOCX file
+  let extractedText = '';
+  try {
+    extractedText = await extractResumeText(file.path, file.mimetype, file.originalname);
+  } catch (err) {
+    console.warn(`[Text Extraction Warning] ${err.message}`);
+    extractedText = '';
+  }
+
+  // 2. Save ResumeFile record
+  const resumeFile = await candidateRepo.createResumeFileRecord(
+    candidate.id,
+    file.originalname,
+    fileUrl,
+    file.mimetype,
+    file.size
+  );
+
+  // 3. Save ResumeVersion record with parsedText
+  const resumeVersion = await candidateRepo.createResumeVersionRecord(
+    resumeFile.id,
+    candidate.id,
+    extractedText
+  );
+
+  return {
+    resumeFile,
+    resumeVersion,
+    extractedText,
+    charCount: extractedText.length,
+    wordCount: extractedText ? extractedText.split(/\s+/).filter(Boolean).length : 0,
+  };
 };
 
 export const removeResumeFile = async (userId, resumeId) => {

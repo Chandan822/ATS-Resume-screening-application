@@ -219,6 +219,25 @@ export const createResumeFileRecord = async (candidateId, fileName, fileUrl, fil
   });
 };
 
+export const createResumeVersionRecord = async (resumeFileId, candidateId, parsedText) => {
+  // Find current max version number for candidate
+  const lastVersion = await prisma.resumeVersion.findFirst({
+    where: { candidateId },
+    orderBy: { versionNumber: 'desc' },
+  });
+
+  const nextVersionNumber = lastVersion ? lastVersion.versionNumber + 1 : 1;
+
+  return prisma.resumeVersion.create({
+    data: {
+      resumeFileId,
+      candidateId,
+      versionNumber: nextVersionNumber,
+      parsedText,
+    },
+  });
+};
+
 export const deleteResumeFileRecord = async (id, candidateId) => {
   return prisma.resumeFile.deleteMany({
     where: { id, candidateId },
