@@ -106,6 +106,13 @@ export const candidateService = {
     return response.data;
   },
 
+  async compareResumes(resumeA, resumeB) {
+    const response = await apiClient.get('/candidate/resumes/compare', {
+      params: { resumeA, resumeB },
+    });
+    return response.data;
+  },
+
   // Candidate Applications Workflow
   async applyToJob(jobId) {
     const response = await apiClient.post('/candidate/applications', { jobId });

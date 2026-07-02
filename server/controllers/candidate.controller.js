@@ -257,10 +257,23 @@ export const parseResumeAI = async (req, res, next) => {
 
 export const scoreResume = async (req, res, next) => {
   try {
-    const result = await candidateService.scoreResume(req.user.id, req.params.id);
+    const scoreResult = await candidateService.scoreResume(req.user.id, req.params.id);
+    return res.status(200).json({ success: true, message: 'Resume scored successfully', data: scoreResult });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const compareResumes = async (req, res, next) => {
+  try {
+    const { resumeA, resumeB } = req.query;
+    if (!resumeA || !resumeB) {
+      return res.status(400).json({ success: false, message: 'Query parameters resumeA and resumeB are required' });
+    }
+    const result = await candidateService.compareResumes(req.user.id, resumeA, resumeB);
     return res.status(200).json({
       success: true,
-      message: 'ATS Resume score calculated successfully',
+      message: 'Comparative analysis generated successfully',
       data: result,
     });
   } catch (error) {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { candidateService } from '../../services/candidateService';
 import AtsScoreDashboard from '../../components/AtsScoreDashboard';
+import ResumeComparisonView from './ResumeComparisonView';
 import {
   User,
   Briefcase,
@@ -246,29 +247,31 @@ export function CandidateProfile() {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-4 overflow-x-auto text-xs font-bold scrollbar-none">
+        {/* Tab Navigation */}
+        <div className="flex border-b border-slate-200 overflow-x-auto text-xs font-bold">
           {[
-            { id: 'overview', label: 'Overview & Info', icon: User },
-            { id: 'education', label: `Education (${candidate.educations?.length || 0})`, icon: GraduationCap },
-            { id: 'experience', label: `Experience (${candidate.experiences?.length || 0})`, icon: Briefcase },
-            { id: 'projects', label: `Projects (${candidate.projects?.length || 0})`, icon: FolderGit2 },
-            { id: 'skills', label: `Skills (${candidate.candidateSkills?.length || 0})`, icon: Sparkles },
-            { id: 'certificates', label: `Certificates (${candidate.certificates?.length || 0})`, icon: Award },
-            { id: 'resumes', label: `Resumes (${candidate.resumeFiles?.length || 0})`, icon: FileText },
+            { id: 'profile', label: 'Basic Info', icon: User },
+            { id: 'resumes', label: 'Resume Files', icon: FileText },
+            { id: 'compare', label: 'Compare Resumes', icon: TrendingUp },
+            { id: 'experience', label: 'Work Experience', icon: Briefcase },
+            { id: 'education', label: 'Education', icon: GraduationCap },
+            { id: 'skills', label: 'Skills & Tech Stack', icon: Code },
+            { id: 'certificates', label: 'Certificates', icon: Award },
+            { id: 'languages', label: 'Languages', icon: Globe },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition whitespace-nowrap ${
+                className={`flex items-center gap-2 px-5 py-3.5 border-b-2 font-bold whitespace-nowrap transition ${
                   activeTab === tab.id
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
                 }`}
               >
-                <Icon className="w-4 h-4" /> {tab.label}
+                <Icon className="w-4 h-4" />
+                {tab.label}
               </button>
             );
           })}
@@ -530,6 +533,8 @@ export function CandidateProfile() {
           </div>
         )}
 
+        {/* TAB 3: COMPARE RESUMES SIDE-BY-SIDE */}
+        {activeTab === 'compare' && <ResumeComparisonView />}
         {/* TAB 3: EXPERIENCE */}
         {activeTab === 'experience' && (
           <div className="space-y-6">

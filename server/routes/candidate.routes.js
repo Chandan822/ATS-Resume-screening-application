@@ -74,6 +74,7 @@ router.post('/certificates', candidateController.addCertificate);
 router.delete('/certificates/:id', candidateController.deleteCertificate);
 
 // Resume Upload, AI Parsing & ATS Scoring
+router.get('/resumes/compare', candidateController.compareResumes);
 router.post('/resumes', upload.single('resume'), candidateController.uploadResume);
 router.post('/resumes/:id/parse-ai', candidateController.parseResumeAI);
 router.post('/resumes/:id/score', candidateController.scoreResume);

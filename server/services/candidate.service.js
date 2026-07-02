@@ -229,12 +229,81 @@ export const scoreResume = async (userId, resumeFileId) => {
     throw error;
   }
 
-  // Calculate ATS Score breakdown
   const scoringResult = calculateAtsScore(resumeVersion.parsedText, resumeVersion.parsedData || {});
 
   return {
     resumeFileId,
     resumeVersionId: resumeVersion.id,
     ...scoringResult,
+  };
+};
+
+export const compareResumes = async (userId, resumeIdA, resumeIdB) => {
+  const candidate = await candidateRepo.findCandidateByUserId(userId);
+  const versionA = await candidateRepo.findLatestResumeVersion(resumeIdA, candidate.id);
+  const versionB = await candidateRepo.findLatestResumeVersion(resumeIdB, candidate.id);
+
+  if (!versionA || !versionB) {
+    throw new Error('Both resume versions must exist to run comparative analysis.');
+  }
+
+  const scoreA = calculateAtsScore(versionA.parsedText || '', versionA.parsedData || {});
+  const scoreB = calculateAtsScore(versionB.parsedText || '', versionB.parsedData || {});
+
+  const skillsA = (versionA.parsedData?.skills || []).map((s) => (typeof s === 'string' ? s : s.name || ''));
+  const skillsB = (versionB.parsedData?.skills || []).map((s) => (typeof s === 'string' ? s : s.name || ''));
+
+  const addedSkills = skillsB.filter((s) => s && !skillsA.includes(s));
+  const removedSkills = skillsA.filter((s) => s && !skillsB.includes(s));
+
+  const improvements = [];
+  const atsDiff = scoreB.overallScore - scoreA.overallScore;
+
+  if (atsDiff > 0) {
+    improvements.push(`Resume B increases overall ATS Score by +${atsDiff} points (${scoreA.overallScore}% → ${scoreB.overallScore}%).`);
+  } else if (atsDiff < 0) {
+    improvements.push(`Resume A achieves a higher overall ATS Score (+${Math.abs(atsDiff)} points).`);
+  } else {
+    improvements.push('Both resumes achieve an identical overall ATS score benchmark.');
+  }
+
+  if (addedSkills.length > 0) {
+    improvements.push(`Resume B adds ${addedSkills.length} new technical skills: ${addedSkills.slice(0, 5).join(', ')}.`);
+  }
+
+  if (scoreB.sections.keywords > scoreA.sections.keywords) {
+    improvements.push(`Resume B improves Keyword Optimization score by +${scoreB.sections.keywords - scoreA.sections.keywords}%.`);
+  }
+
+  if (scoreB.sections.formatting > scoreA.sections.formatting) {
+    improvements.push(`Resume B improves ATS Formatting & Parser Compatibility by +${scoreB.sections.formatting - scoreA.sections.formatting}%.`);
+  }
+
+  return {
+    resumeA: {
+      id: resumeIdA,
+      title: 'Resume Version A',
+      atsScore: scoreA.overallScore,
+      sections: scoreA.sections,
+      skillsCount: skillsA.length,
+      skills: skillsA,
+      wordCount: (versionA.parsedText || '').split(/\s+/).length,
+    },
+    resumeB: {
+      id: resumeIdB,
+      title: 'Resume Version B',
+      atsScore: scoreB.overallScore,
+      sections: scoreB.sections,
+      skillsCount: skillsB.length,
+      skills: skillsB,
+      wordCount: (versionB.parsedText || '').split(/\s+/).length,
+    },
+    deltas: {
+      atsScoreDiff: atsDiff,
+      winningResume: atsDiff >= 0 ? 'Resume B' : 'Resume A',
+      addedSkills,
+      removedSkills,
+    },
+    improvements,
   };
 };
