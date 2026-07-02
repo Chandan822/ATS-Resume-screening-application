@@ -72,6 +72,15 @@ export const registerUser = async (data) => {
     }
   );
 
+  logAuditAction({
+    userId: user.id,
+    action: 'REGISTER',
+    entity: 'User',
+    entityId: user.id,
+    req,
+    changes: { email: user.email, role: user.role },
+  }).catch(() => {});
+
   return {
     user: sanitizeUser(user),
     verificationToken, // Returned for UI testing / email verification simulation
@@ -81,7 +90,7 @@ export const registerUser = async (data) => {
 /**
  * Login User
  */
-export const loginUser = async ({ email, password }) => {
+export const loginUser = async ({ email, password }, req = null) => {
   const user = await userRepository.findUserByEmail(email);
   if (!user) {
     const error = new Error('Invalid email or password');
@@ -101,6 +110,15 @@ export const loginUser = async ({ email, password }) => {
     error.statusCode = 401;
     throw error;
   }
+
+  logAuditAction({
+    userId: user.id,
+    action: 'USER_LOGIN',
+    entity: 'User',
+    entityId: user.id,
+    req,
+    changes: { email: user.email, role: user.role },
+  }).catch(() => {});
 
   // Update last login
   await userRepository.updateLastLogin(user.id);

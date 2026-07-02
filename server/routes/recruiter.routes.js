@@ -8,9 +8,10 @@ const router = express.Router();
 router.use(authenticateJWT);
 router.use(authorizeRoles('RECRUITER', 'ADMIN'));
 
-// Dashboard Overview & Analytics
+// Dashboard Overview & Analytics & Audit Logs
 router.get('/dashboard/stats', recruiterController.getDashboardStats);
 router.get('/analytics/overview', recruiterController.getRecruitmentAnalytics);
+router.get('/audit-logs', recruiterController.getAuditLogs);
 
 // Job Management Endpoints
 router.get('/jobs', recruiterController.getJobs);

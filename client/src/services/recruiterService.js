@@ -11,6 +11,11 @@ export const recruiterService = {
     return response.data;
   },
 
+  async getAuditLogs(params = {}) {
+    const response = await apiClient.get('/recruiter/audit-logs', { params });
+    return response.data;
+  },
+
   async getJobs(params = {}) {
     const response = await apiClient.get('/recruiter/jobs', { params });
     return response.data;

@@ -6,6 +6,7 @@ import * as feedbackService from '../services/feedbackAnalyzer.service.js';
 import * as biasService from '../services/biasDetector.service.js';
 import * as sourcingService from '../services/talentSourcing.service.js';
 import * as analyticsService from '../services/analytics.service.js';
+import * as auditLogService from '../services/auditLog.service.js';
 import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
@@ -302,6 +303,34 @@ export const getRecruitmentAnalytics = async (req, res, next) => {
       success: true,
       message: 'Recruitment analytics overview dataset fetched successfully',
       data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Searchable Audit Logs Handler
+export const getAuditLogs = async (req, res, next) => {
+  try {
+    const { search, userId, action, entity, dateRange, page, limit } = req.query;
+    const result = await auditLogService.getAuditLogs({
+      search,
+      userId,
+      action,
+      entity,
+      dateRange,
+      page,
+      limit,
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'Audit logs fetched successfully',
+      data: result.logs,
+      pagination: {
+        totalCount: result.totalCount,
+        page: result.page,
+        totalPages: result.totalPages,
+      },
     });
   } catch (error) {
     next(error);

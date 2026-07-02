@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
 import { Link } from 'react-router-dom';
+import AuditLogViewer from '../../components/AuditLogViewer';
 import {
   Briefcase,
   Users,
@@ -93,6 +94,27 @@ export function RecruiterDashboard() {
           </div>
           <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Recruiter Command Center</h2>
           <p className="text-xs text-slate-500">Overview of active job openings, candidate pipelines, and scheduling.</p>
+        
+          {/* Action Controls & Navigation Tabs */}
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-xl font-bold text-xs transition ${
+                activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              Dashboard Overview
+            </button>
+
+            <button
+              onClick={() => setActiveTab('audit')}
+              className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-1.5 ${
+                activeTab === 'audit' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Security Audit Logs
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -111,7 +133,12 @@ export function RecruiterDashboard() {
         </div>
       </div>
 
-      {/* 4 Core Stat Widgets */}
+      {/* ACTIVE TAB CONTENT */}
+      {activeTab === 'audit' ? (
+        <AuditLogViewer />
+      ) : (
+        <>
+          {/* Overview Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {statCards.map((card, idx) => {
           const Icon = card.icon;
@@ -204,8 +231,10 @@ export function RecruiterDashboard() {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </>
+  )}
+</div>
+);
 }
 
 export default RecruiterDashboard;
