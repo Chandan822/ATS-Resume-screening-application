@@ -66,6 +66,22 @@ export const recruiterService = {
     const response = await apiClient.get(`/recruiter/interviews/${roundId}/questions`);
     return response.data;
   },
+
+  // AI Interviewer Notes & Feedback Analyzer Methods
+  async analyzeInterviewerNotes(notes) {
+    const response = await apiClient.post('/recruiter/interviews/analyze-notes', { notes });
+    return response.data;
+  },
+
+  async saveInterviewFeedback(roundId, feedbackData) {
+    const response = await apiClient.post(`/recruiter/interviews/${roundId}/feedback`, feedbackData);
+    return response.data;
+  },
+
+  async getInterviewFeedback(roundId) {
+    const response = await apiClient.get(`/recruiter/interviews/${roundId}/feedback`);
+    return response.data;
+  },
 };
 
 export default recruiterService;

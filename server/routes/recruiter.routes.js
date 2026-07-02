@@ -31,6 +31,11 @@ router.post('/interviews/generate-questions', recruiterController.generateInterv
 router.post('/interviews/:roundId/questions', recruiterController.saveInterviewQuestions);
 router.get('/interviews/:roundId/questions', recruiterController.getInterviewQuestions);
 
+// AI Interviewer Notes & Feedback Analyzer Endpoints
+router.post('/interviews/analyze-notes', recruiterController.analyzeInterviewerNotes);
+router.post('/interviews/:roundId/feedback', recruiterController.saveInterviewFeedback);
+router.get('/interviews/:roundId/feedback', recruiterController.getInterviewFeedback);
+
 // Applicant Pipeline Endpoints
 router.get('/applications', recruiterController.getApplications);
 router.put('/applications/:id/status', recruiterController.updateApplicationStatus);

@@ -494,6 +494,7 @@ model InterviewFeedback {
   weaknesses       String?        @db.Text
   comments         String?        @db.Text
   recommendation   Recommendation @default(NEUTRAL)
+  aiAnalysis       Json?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 

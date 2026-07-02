@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
 import InterviewQuestionGenerator from '../../components/InterviewQuestionGenerator';
-import { Users, Mail, RefreshCw, Sparkles, X } from 'lucide-react';
+import FeedbackAnalysisDashboard from '../../components/FeedbackAnalysisDashboard';
+import { Users, Mail, RefreshCw, Sparkles, Brain, X } from 'lucide-react';
 
 export function RecruiterApplicants() {
   const queryClient = useQueryClient();
   const [filterStage, setFilterStage] = useState('ALL');
   const [selectedAppForQuestions, setSelectedAppForQuestions] = useState(null);
+  const [selectedAppForFeedback, setSelectedAppForFeedback] = useState(null);
 
   const { data: apps, isLoading, isError, refetch } = useQuery({
     queryKey: ['recruiterApps'],
@@ -134,6 +136,13 @@ export function RecruiterApplicants() {
                       >
                         <Sparkles className="w-3 h-3" /> Questions
                       </button>
+                      <button
+                        onClick={() => setSelectedAppForFeedback(app)}
+                        className="px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold flex items-center gap-1 transition"
+                        title="Analyze Interviewer Notes"
+                      >
+                        <Brain className="w-3 h-3" /> Notes AI
+                      </button>
                       <select
                         value={app.status}
                         onChange={(e) => updateStageMut.mutate({ id: app.id, status: e.target.value })}
@@ -169,6 +178,23 @@ export function RecruiterApplicants() {
               candidateName={`${selectedAppForQuestions.candidate?.user?.firstName || 'Candidate'} ${selectedAppForQuestions.candidate?.user?.lastName || ''}`}
               jobTitle={selectedAppForQuestions.job?.title || 'Job Opening'}
               roundId={selectedAppForQuestions.id}
+            />
+          </div>
+        </div>
+      )}
+      {/* MODAL: AI FEEDBACK ANALYSIS DASHBOARD */}
+      {selectedAppForFeedback && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-4xl w-full relative my-8">
+            <button
+              onClick={() => setSelectedAppForFeedback(null)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 rounded-xl"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <FeedbackAnalysisDashboard
+              candidateName={`${selectedAppForFeedback.candidate?.user?.firstName || 'Candidate'} ${selectedAppForFeedback.candidate?.user?.lastName || ''}`}
+              roundId={selectedAppForFeedback.id}
             />
           </div>
         </div>

@@ -2,6 +2,7 @@ import * as recruiterService from '../services/recruiter.service.js';
 import * as jobService from '../services/job.service.js';
 import * as semanticService from '../services/semanticMatcher.service.js';
 import * as questionService from '../services/questionGenerator.service.js';
+import * as feedbackService from '../services/feedbackAnalyzer.service.js';
 import { createJobSchema, updateJobSchema, jobQuerySchema } from '../validators/job.validator.js';
 
 export const getDashboardStats = async (req, res, next) => {
@@ -207,6 +208,54 @@ export const getInterviewQuestions = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: questions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// AI Interviewer Notes & Feedback Analyzer Handlers
+export const analyzeInterviewerNotes = async (req, res, next) => {
+  try {
+    const { notes } = req.body;
+    if (!notes) {
+      return res.status(400).json({ success: false, message: 'notes text is required' });
+    }
+    const analysis = await feedbackService.analyzeInterviewerNotes(notes);
+    return res.status(200).json({
+      success: true,
+      message: 'Interviewer notes analyzed into structured JSON successfully',
+      data: analysis,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const saveInterviewFeedback = async (req, res, next) => {
+  try {
+    const { roundId } = req.params;
+    const feedback = await feedbackService.saveInterviewFeedback(req.user.id, {
+      interviewRoundId: roundId,
+      ...req.body,
+    });
+    return res.status(201).json({
+      success: true,
+      message: 'Interview feedback and AI analysis saved to database',
+      data: feedback,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getInterviewFeedback = async (req, res, next) => {
+  try {
+    const { roundId } = req.params;
+    const feedbackList = await feedbackService.getInterviewFeedback(roundId);
+    return res.status(200).json({
+      success: true,
+      data: feedbackList,
     });
   } catch (error) {
     next(error);
