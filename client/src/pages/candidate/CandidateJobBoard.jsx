@@ -47,6 +47,17 @@ export function CandidateJobBoard() {
 
   const savedJobIds = (savedJobsData || []).map((j) => j.id);
 
+  // Fetch Submitted Applications for applied state
+  const { data: applicationsData } = useQuery({
+    queryKey: ['candidateApplications'],
+    queryFn: async () => {
+      const res = await candidateService.getMyApplications();
+      return res.data || [];
+    },
+  });
+
+  const appliedJobIds = (applicationsData || []).map((app) => app.jobId);
+
   // Apply Mutation
   const applyMut = useMutation({
     mutationFn: (jobId) => candidateService.applyToJob(jobId),
@@ -189,11 +200,15 @@ export function CandidateJobBoard() {
                     View Details
                   </button>
                   <button
-                    onClick={() => applyMut.mutate(job.id)}
-                    disabled={applyMut.isPending}
-                    className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition shadow-md shadow-indigo-600/20 disabled:opacity-50"
+                    onClick={() => !appliedJobIds.includes(job.id) && applyMut.mutate(job.id)}
+                    disabled={applyMut.isPending || appliedJobIds.includes(job.id)}
+                    className={`flex-1 py-2 rounded-xl font-bold text-center transition shadow-md disabled:opacity-50 ${
+                      appliedJobIds.includes(job.id)
+                        ? 'bg-emerald-600 text-white shadow-emerald-600/20 cursor-default'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                    }`}
                   >
-                    {applyMut.isPending ? 'Applying...' : 'Apply Now'}
+                    {applyMut.isPending ? 'Applying...' : appliedJobIds.includes(job.id) ? 'Applied' : 'Apply Now'}
                   </button>
                 </div>
               </div>
@@ -264,11 +279,20 @@ export function CandidateJobBoard() {
                 Close
               </button>
               <button
-                onClick={() => applyMut.mutate(selectedJob.id)}
-                disabled={applyMut.isPending}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold inline-flex items-center gap-2 shadow-md shadow-indigo-600/20 disabled:opacity-50"
+                onClick={() => !appliedJobIds.includes(selectedJob.id) && applyMut.mutate(selectedJob.id)}
+                disabled={applyMut.isPending || appliedJobIds.includes(selectedJob.id)}
+                className={`px-6 py-2.5 rounded-xl font-bold inline-flex items-center gap-2 shadow-md disabled:opacity-50 transition ${
+                  appliedJobIds.includes(selectedJob.id)
+                    ? 'bg-emerald-600 text-white shadow-emerald-600/20 cursor-default'
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                }`}
               >
-                {applyMut.isPending ? 'Applying...' : 'Submit Application'} <ArrowRight className="w-4 h-4" />
+                {applyMut.isPending 
+                  ? 'Applying...' 
+                  : appliedJobIds.includes(selectedJob.id) 
+                    ? 'Applied' 
+                    : 'Submit Application'} 
+                {!appliedJobIds.includes(selectedJob.id) && <ArrowRight className="w-4 h-4" />}
               </button>
             </div>
           </div>

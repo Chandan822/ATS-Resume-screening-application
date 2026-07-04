@@ -1,9 +1,6 @@
 import fs from 'fs';
-import { createRequire } from 'module';
 import mammoth from 'mammoth';
-
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+import { PDFParse } from 'pdf-parse';
 
 /**
  * Clean & Normalize Raw Extracted Text
@@ -31,7 +28,9 @@ export const cleanExtractedText = (text) => {
  */
 export const extractTextFromPDF = async (filePath) => {
   const dataBuffer = fs.readFileSync(filePath);
-  const data = await pdfParse(dataBuffer);
+  const uint8Array = new Uint8Array(dataBuffer);
+  const parser = new PDFParse(uint8Array);
+  const data = await parser.getText();
   return cleanExtractedText(data.text);
 };
 

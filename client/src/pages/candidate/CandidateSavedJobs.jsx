@@ -15,6 +15,17 @@ export function CandidateSavedJobs() {
     },
   });
 
+  // Fetch Submitted Applications for applied state check
+  const { data: applicationsData } = useQuery({
+    queryKey: ['candidateApplications'],
+    queryFn: async () => {
+      const res = await candidateService.getMyApplications();
+      return res.data || [];
+    },
+  });
+
+  const appliedJobIds = (applicationsData || []).map((app) => app.jobId);
+
   const unsaveMut = useMutation({
     mutationFn: (jobId) => candidateService.unsaveJob(jobId),
     onSuccess: () => {
@@ -24,8 +35,12 @@ export function CandidateSavedJobs() {
 
   const applyMut = useMutation({
     mutationFn: (jobId) => candidateService.applyToJob(jobId),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      alert(data.message || 'Application submitted successfully!');
       queryClient.invalidateQueries({ queryKey: ['candidateApplications'] });
+    },
+    onError: (err) => {
+      alert(err.response?.data?.message || 'Failed to submit application.');
     },
   });
 
@@ -131,11 +146,15 @@ export function CandidateSavedJobs() {
                   </button>
 
                   <button
-                    onClick={() => applyMut.mutate(job.id)}
-                    disabled={applyMut.isPending}
-                    className="px-4 py-1.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition inline-flex items-center gap-1 disabled:opacity-50"
+                    onClick={() => !appliedJobIds.includes(job.id) && applyMut.mutate(job.id)}
+                    disabled={applyMut.isPending || appliedJobIds.includes(job.id)}
+                    className={`px-4 py-1.5 rounded-xl font-bold transition inline-flex items-center gap-1 disabled:opacity-50 ${
+                      appliedJobIds.includes(job.id)
+                        ? 'bg-emerald-600 text-white cursor-default'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
                   >
-                    Apply Now <ArrowRight className="w-3.5 h-3.5" />
+                    {appliedJobIds.includes(job.id) ? 'Applied' : 'Apply Now'} {!appliedJobIds.includes(job.id) && <ArrowRight className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>
