@@ -119,14 +119,7 @@ export const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="analytics"
-          element={
-            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
-              <RecruiterAnalytics />
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="companies"
           element={
@@ -167,7 +160,6 @@ export const AppRoutes = () => {
         <Route path="applicants" element={<RecruiterApplicants />} />
         <Route path="candidates" element={<RecruiterCandidates />} />
         <Route path="interviews" element={<RecruiterInterviews />} />
-        <Route path="analytics" element={<RecruiterAnalytics />} />
         <Route path="companies" element={<RecruiterCompanies />} />
       </Route>
     </Routes>

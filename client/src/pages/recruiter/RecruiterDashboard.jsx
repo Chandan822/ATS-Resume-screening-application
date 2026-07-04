@@ -176,9 +176,6 @@ export function RecruiterDashboard() {
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">Distribution of candidate applications across current pipeline stages.</p>
             </div>
-            <Link to="/dashboard/analytics" className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1">
-              Analytics <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
 
           <div className="space-y-4 text-xs">

@@ -48,7 +48,6 @@ export function DashboardLayout() {
     { name: 'Candidates', path: '/dashboard/candidates', icon: Users },
     { name: 'Applications', path: '/dashboard/applications', icon: FileText },
     { name: 'Interviews', path: '/dashboard/interviews', icon: Calendar },
-    { name: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
     { name: 'Settings', path: '/dashboard/settings', icon: Settings },
   ];
 
