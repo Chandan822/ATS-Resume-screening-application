@@ -84,15 +84,57 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<DashboardIndexRedirect />} />
-        <Route path="recruiter" element={<RecruiterDashboard />} />
+        <Route
+          path="recruiter"
+          element={
+            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+              <RecruiterDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="profile" element={<CandidateProfile />} />
         <Route path="jobs" element={<DashboardJobsRoute />} />
-        <Route path="candidates" element={<RecruiterCandidates />} />
+        <Route
+          path="candidates"
+          element={
+            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+              <RecruiterCandidates />
+            </ProtectedRoute>
+          }
+        />
         <Route path="applications" element={<DashboardApplicationsRoute />} />
-        <Route path="saved-jobs" element={<CandidateSavedJobs />} />
-        <Route path="interviews" element={<RecruiterInterviews />} />
-        <Route path="analytics" element={<RecruiterAnalytics />} />
-        <Route path="companies" element={<RecruiterCompanies />} />
+        <Route
+          path="saved-jobs"
+          element={
+            <ProtectedRoute allowedRoles={['CANDIDATE', 'ADMIN']}>
+              <CandidateSavedJobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="interviews"
+          element={
+            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+              <RecruiterInterviews />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="analytics"
+          element={
+            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+              <RecruiterAnalytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="companies"
+          element={
+            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+              <RecruiterCompanies />
+            </ProtectedRoute>
+          }
+        />
         <Route path="settings" element={<DashboardSettingsRoute />} />
       </Route>
 

@@ -88,7 +88,9 @@ export function DashboardLayout() {
         } ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Sidebar Header */}
-        <div className="p-4 flex items-center justify-between border-b border-slate-100">
+        <div className={`p-4 flex border-b border-slate-100 transition-all duration-300 ${
+          sidebarCollapsed ? 'flex-col items-center justify-center gap-3 px-2' : 'items-center justify-between'
+        }`}>
           <Link to="/" className="flex items-center gap-3 overflow-hidden">
             <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20 shrink-0">
               <Bot className="w-5 h-5" />

@@ -3,13 +3,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
 import InterviewQuestionGenerator from '../../components/InterviewQuestionGenerator';
 import FeedbackAnalysisDashboard from '../../components/FeedbackAnalysisDashboard';
-import { Users, Mail, RefreshCw, Sparkles, Brain, X } from 'lucide-react';
+import { Users, Mail, RefreshCw, Sparkles, Brain, X, Calendar } from 'lucide-react';
 
 export function RecruiterApplicants() {
   const queryClient = useQueryClient();
   const [filterStage, setFilterStage] = useState('ALL');
   const [selectedAppForQuestions, setSelectedAppForQuestions] = useState(null);
   const [selectedAppForFeedback, setSelectedAppForFeedback] = useState(null);
+
+  // Custom scheduling modal states
+  const [schedulingApp, setSchedulingApp] = useState(null);
+  const [roundName, setRoundName] = useState('Technical Interview Round 1');
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState(45);
 
   const { data: apps, isLoading, isError, refetch } = useQuery({
     queryKey: ['recruiterApps'],
@@ -20,12 +26,29 @@ export function RecruiterApplicants() {
   });
 
   const updateStageMut = useMutation({
-    mutationFn: ({ id, status }) => recruiterService.updateApplicationStatus(id, status),
+    mutationFn: ({ id, status, schedule }) => recruiterService.updateApplicationStatus(id, status, schedule),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recruiterApps'] });
       queryClient.invalidateQueries({ queryKey: ['recruiterStats'] });
     },
   });
+
+  const handleStatusChange = (app, newStatus) => {
+    if (newStatus === 'INTERVIEW_SCHEDULED') {
+      setSchedulingApp(app);
+      // Set default schedule time to tomorrow at 10:00 AM local timezone
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(10, 0, 0, 0);
+      const tzOffset = tomorrow.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(tomorrow.getTime() - tzOffset)).toISOString().slice(0, 16);
+      setScheduledAt(localISOTime);
+      setRoundName('Technical Interview Round 1');
+      setDurationMinutes(45);
+    } else {
+      updateStageMut.mutate({ id: app.id, status: newStatus });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -145,7 +168,7 @@ export function RecruiterApplicants() {
                       </button>
                       <select
                         value={app.status}
-                        onChange={(e) => updateStageMut.mutate({ id: app.id, status: e.target.value })}
+                        onChange={(e) => handleStatusChange(app, e.target.value)}
                         className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-600"
                       >
                         <option value="APPLIED">Applied</option>
@@ -196,6 +219,102 @@ export function RecruiterApplicants() {
               candidateName={`${selectedAppForFeedback.candidate?.user?.firstName || 'Candidate'} ${selectedAppForFeedback.candidate?.user?.lastName || ''}`}
               roundId={selectedAppForFeedback.id}
             />
+          </div>
+        </div>
+      )}
+      {/* MODAL: SCHEDULE INTERVIEW */}
+      {schedulingApp && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 md:p-8 space-y-6 shadow-2xl relative">
+            <button
+              onClick={() => setSchedulingApp(null)}
+              className="absolute right-4 top-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-indigo-600" /> Schedule Interview
+              </h3>
+              <p className="text-xs text-slate-500">
+                Configure interview details for <span className="font-bold text-slate-700">{schedulingApp.candidate?.user?.firstName} {schedulingApp.candidate?.user?.lastName}</span>.
+              </p>
+            </div>
+
+            <div className="space-y-4 text-xs font-bold font-sans">
+              {/* Round Name */}
+              <div className="space-y-1.5">
+                <label className="text-slate-700">Interview Round Name</label>
+                <input
+                  type="text"
+                  value={roundName}
+                  onChange={(e) => setRoundName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition font-medium"
+                />
+              </div>
+
+              {/* Scheduled At */}
+              <div className="space-y-1.5">
+                <label className="text-slate-700">Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition font-medium"
+                />
+              </div>
+
+              {/* Duration */}
+              <div className="space-y-1.5">
+                <label className="text-slate-700">Duration (Minutes)</label>
+                <select
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
+                >
+                  <option value={15}>15 Minutes</option>
+                  <option value={30}>30 Minutes</option>
+                  <option value={45}>45 Minutes</option>
+                  <option value={60}>60 Minutes</option>
+                  <option value={90}>90 Minutes</option>
+                </select>
+              </div>
+
+              {/* Google Meet Info Box */}
+              <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] leading-relaxed font-medium">
+                <strong>Google Meet Link Generation:</strong> A unique Meet video conferencing link will be auto-generated and emailed directly to the applicant with the meeting invite details.
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setSchedulingApp(null)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  updateStageMut.mutate({
+                    id: schedulingApp.id,
+                    status: 'INTERVIEW_SCHEDULED',
+                    schedule: {
+                      roundName,
+                      scheduledAt,
+                      durationMinutes,
+                    },
+                  }, {
+                    onSuccess: () => {
+                      setSchedulingApp(null);
+                    }
+                  });
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition text-xs shadow-md shadow-indigo-600/20"
+              >
+                Schedule
+              </button>
+            </div>
           </div>
         </div>
       )}

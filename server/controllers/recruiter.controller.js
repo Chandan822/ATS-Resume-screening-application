@@ -115,8 +115,8 @@ export const getApplications = async (req, res, next) => {
 
 export const updateApplicationStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
-    const result = await recruiterService.updateApplicationStatus(req.params.id, status);
+    const { status, schedule } = req.body;
+    const result = await recruiterService.updateApplicationStatus(req.params.id, status, schedule);
     return res.status(200).json({ success: true, message: 'Application status updated', data: result });
   } catch (error) {
     next(error);

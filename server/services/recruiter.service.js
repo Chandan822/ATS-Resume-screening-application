@@ -35,8 +35,8 @@ export const getApplications = async (userId) => {
   return recruiterRepo.getApplicationsList(userId);
 };
 
-export const updateApplicationStatus = async (applicationId, status) => {
-  return recruiterRepo.updateApplicationStage(applicationId, status);
+export const updateApplicationStatus = async (applicationId, status, schedule) => {
+  return recruiterRepo.updateApplicationStage(applicationId, status, schedule);
 };
 
 export const getCandidates = async () => {

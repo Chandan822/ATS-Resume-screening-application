@@ -56,8 +56,8 @@ export const recruiterService = {
     return response.data;
   },
 
-  async updateApplicationStatus(id, status) {
-    const response = await apiClient.put(`/recruiter/applications/${id}/status`, { status });
+  async updateApplicationStatus(id, status, schedule = null) {
+    const response = await apiClient.put(`/recruiter/applications/${id}/status`, { status, schedule });
     return response.data;
   },
 

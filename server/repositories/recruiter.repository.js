@@ -1,4 +1,5 @@
 import prisma from '../config/db.js';
+import { createAndDispatchNotification } from '../services/notification.service.js';
 
 /**
  * Fetch Recruiter Dashboard High-Level Statistics
@@ -24,7 +25,12 @@ export const getRecruiterStats = async (userId) => {
 
   // 3. Scheduled Interviews Count
   const interviewsCount = await prisma.interviewRound.count({
-    where: companyId ? { application: { job: { companyId } } } : {},
+    where: {
+      ...(companyId ? { application: { job: { companyId } } } : {}),
+      application: {
+        status: 'INTERVIEW_SCHEDULED',
+      },
+    },
   });
 
   // 4. Offers Extended Count
@@ -136,11 +142,94 @@ export const getApplicationsList = async (userId) => {
 /**
  * Update Application Status Stage
  */
-export const updateApplicationStage = async (applicationId, status) => {
-  return prisma.application.update({
+export const updateApplicationStage = async (applicationId, status, schedule = null) => {
+  const updatedApp = await prisma.application.update({
     where: { id: applicationId },
     data: { status },
+    include: {
+      candidate: {
+        include: {
+          user: true,
+        },
+      },
+      job: true,
+    },
   });
+
+  if (status === 'INTERVIEW_SCHEDULED') {
+    // Check if an InterviewRound already exists
+    const existingRound = await prisma.interviewRound.findFirst({
+      where: { applicationId },
+    });
+
+    // Create unique Google Meet-like link format: e.g. xxx-yyyy-zzz
+    const meetId = Math.random().toString(36).substring(2, 5) + '-' + 
+                   Math.random().toString(36).substring(2, 6) + '-' + 
+                   Math.random().toString(36).substring(2, 5);
+    const googleMeetLink = `https://meet.google.com/${meetId}`;
+
+    const roundName = schedule?.roundName || 'Technical Interview Round 1';
+    const scheduledAt = schedule?.scheduledAt ? new Date(schedule.scheduledAt) : (() => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(10, 0, 0, 0);
+      return tomorrow;
+    })();
+    const durationMinutes = schedule?.durationMinutes ? parseInt(schedule.durationMinutes) : 45;
+
+    let round;
+    if (existingRound) {
+      round = await prisma.interviewRound.update({
+        where: { id: existingRound.id },
+        data: {
+          roundName,
+          scheduledAt,
+          durationMinutes,
+          locationOrLink: existingRound.locationOrLink || googleMeetLink,
+        },
+      });
+    } else {
+      round = await prisma.interviewRound.create({
+        data: {
+          applicationId,
+          roundName,
+          scheduledAt,
+          durationMinutes,
+          locationOrLink: googleMeetLink,
+          status: 'SCHEDULED',
+        },
+      });
+    }
+
+    // Share link and schedule details to the applicant via notifications & email
+    try {
+      const candidateUser = updatedApp.candidate.user;
+      const jobTitle = updatedApp.job.title;
+      const formattedDate = new Date(scheduledAt).toLocaleString('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+
+      await createAndDispatchNotification({
+        userId: candidateUser.id,
+        title: `Interview Scheduled: ${jobTitle}`,
+        message: `Dear ${candidateUser.firstName}, your interview for the ${jobTitle} position has been scheduled.\n\nRound: ${roundName}\nDate & Time: ${formattedDate}\nDuration: ${durationMinutes} minutes\n\nGoogle Meet Link: ${round.locationOrLink || googleMeetLink}`,
+        type: 'INTERVIEW_SCHEDULED',
+        metadata: {
+          meetLink: round.locationOrLink || googleMeetLink,
+          scheduledAt,
+          durationMinutes,
+          jobTitle,
+          roundName,
+        },
+        emailTo: candidateUser.email,
+      });
+    } catch (notifyErr) {
+      console.error('[Notification Error] Failed to send interview notification:', notifyErr);
+    }
+  }
+
+  return updatedApp;
 };
 
 /**
@@ -166,7 +255,12 @@ export const getInterviewsList = async (userId) => {
   const companyId = recruiter?.companyId || null;
 
   return prisma.interviewRound.findMany({
-    where: companyId ? { application: { job: { companyId } } } : {},
+    where: {
+      ...(companyId ? { application: { job: { companyId } } } : {}),
+      application: {
+        status: 'INTERVIEW_SCHEDULED',
+      },
+    },
     include: {
       application: {
         include: {
