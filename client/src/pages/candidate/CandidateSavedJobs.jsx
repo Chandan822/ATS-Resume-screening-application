@@ -154,7 +154,7 @@ export function CandidateSavedJobs() {
                         : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
                   >
-                    {appliedJobIds.includes(job.id) ? 'Applied' : 'Apply Now'} {!appliedJobIds.includes(job.id) && <ArrowRight className="w-3.5 h-3.5" />}
+                    {applyMut.isPending && applyMut.variables === job.id ? 'Applying...' : appliedJobIds.includes(job.id) ? 'Applied' : 'Apply Now'} {!appliedJobIds.includes(job.id) && !(applyMut.isPending && applyMut.variables === job.id) && <ArrowRight className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>

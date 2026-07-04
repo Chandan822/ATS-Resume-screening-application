@@ -86,9 +86,6 @@ export function RecruiterJobs() {
       queryClient.invalidateQueries({ queryKey: ['recruiterJobs'] });
       queryClient.invalidateQueries({ queryKey: ['recruiterStats'] });
       closeModal();
-      if (data.data) {
-        setRecommendationModalJob(data.data);
-      }
     },
   });
 

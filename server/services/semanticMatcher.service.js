@@ -48,22 +48,21 @@ Required Skills: ${job.jobSkills.map((js) => js.skill.name).join(', ')}
 `;
 
   const vector = await generateTextEmbedding(textToEmbed);
+  const paddedVector = [...vector, ...new Array(1536 - vector.length).fill(0)];
+  const vectorString = `[${paddedVector.join(',')}]`;
+  const id = `emb_job_${jobId}`;
 
-  // Store vector record in Embedding model
-  return prisma.embedding.upsert({
-    where: { id: `emb_job_${jobId}` },
-    update: {
-      entityType: 'JOB_DESCRIPTION',
-      jobId,
-      modelName: 'gemini-text-embedding-004',
-    },
-    create: {
-      id: `emb_job_${jobId}`,
-      entityType: 'JOB_DESCRIPTION',
-      jobId,
-      modelName: 'gemini-text-embedding-004',
-    },
-  }).then(record => ({ ...record, vectorValues: vector }));
+  // Store in PostgreSQL/pgvector database using raw query execution
+  await prisma.$executeRaw`
+    INSERT INTO embeddings (id, "entityType", "jobId", vector, "modelName", "createdAt", "updatedAt")
+    VALUES (${id}, 'JOB_DESCRIPTION'::"EmbeddingEntityType", ${jobId}, ${vectorString}::vector, 'gemini-text-embedding-004', NOW(), NOW())
+    ON CONFLICT (id) DO UPDATE SET
+      vector = ${vectorString}::vector,
+      "updatedAt" = NOW()
+  `;
+
+  const record = await prisma.embedding.findUnique({ where: { id } });
+  return { ...record, vectorValues: vector };
 };
 
 /**
@@ -78,23 +77,21 @@ export const storeResumeEmbedding = async (resumeVersionId, candidateId) => {
 
   const textToEmbed = resumeVersion.parsedText || '';
   const vector = await generateTextEmbedding(textToEmbed);
+  const paddedVector = [...vector, ...new Array(1536 - vector.length).fill(0)];
+  const vectorString = `[${paddedVector.join(',')}]`;
+  const id = `emb_res_${resumeVersionId}`;
 
-  return prisma.embedding.upsert({
-    where: { id: `emb_res_${resumeVersionId}` },
-    update: {
-      entityType: 'RESUME',
-      candidateId,
-      resumeVersionId,
-      modelName: 'gemini-text-embedding-004',
-    },
-    create: {
-      id: `emb_res_${resumeVersionId}`,
-      entityType: 'RESUME',
-      candidateId,
-      resumeVersionId,
-      modelName: 'gemini-text-embedding-004',
-    },
-  }).then(record => ({ ...record, vectorValues: vector }));
+  // Store in PostgreSQL/pgvector database using raw query execution
+  await prisma.$executeRaw`
+    INSERT INTO embeddings (id, "entityType", "candidateId", "resumeVersionId", vector, "modelName", "createdAt", "updatedAt")
+    VALUES (${id}, 'RESUME'::"EmbeddingEntityType", ${candidateId}, ${resumeVersionId}, ${vectorString}::vector, 'gemini-text-embedding-004', NOW(), NOW())
+    ON CONFLICT (id) DO UPDATE SET
+      vector = ${vectorString}::vector,
+      "updatedAt" = NOW()
+  `;
+
+  const record = await prisma.embedding.findUnique({ where: { id } });
+  return { ...record, vectorValues: vector };
 };
 
 /**
@@ -126,12 +123,43 @@ export const matchCandidateToJob = async (candidateId, jobId) => {
   const jobText = `${job.title} ${job.department || ''} ${job.description} ${job.requirements || ''}`;
   const candidateResumeText = candidate.resumeFiles?.[0]?.versions?.[0]?.parsedText || `${candidate.headline || ''} ${candidate.summary || ''}`;
 
-  const [jobVector, candidateVector] = await Promise.all([
-    generateTextEmbedding(jobText),
-    generateTextEmbedding(candidateResumeText),
-  ]);
+  // Store or refresh job and resume vector embeddings in DB
+  const jobEmbId = `emb_job_${jobId}`;
+  const resumeVersionId = candidate.resumeFiles?.[0]?.versions?.[0]?.id || null;
+  const resumeEmbId = resumeVersionId ? `emb_res_${resumeVersionId}` : null;
 
-  const rawCosineSim = calculateCosineSimilarity(jobVector, candidateVector);
+  await storeJobEmbedding(jobId).catch(() => {});
+  if (resumeVersionId) {
+    await storeResumeEmbedding(resumeVersionId, candidateId).catch(() => {});
+  }
+
+  let rawCosineSim = 0.5;
+  if (resumeEmbId) {
+    try {
+      const similarityRows = await prisma.$queryRaw`
+        SELECT (1 - (vector <=> (SELECT vector FROM embeddings WHERE id = ${jobEmbId}))) AS similarity
+        FROM embeddings
+        WHERE id = ${resumeEmbId}
+      `;
+      if (similarityRows && similarityRows.length > 0 && similarityRows[0].similarity !== null) {
+        rawCosineSim = similarityRows[0].similarity;
+      }
+    } catch (dbErr) {
+      console.warn('[Semantic Matcher DB Warning] Failed to compute semantic similarity via database pgvector. Falling back to local calculations:', dbErr);
+      const [jobVector, candidateVector] = await Promise.all([
+        generateTextEmbedding(jobText),
+        generateTextEmbedding(candidateResumeText),
+      ]);
+      rawCosineSim = calculateCosineSimilarity(jobVector, candidateVector);
+    }
+  } else {
+    // If candidate has no resume, fallback to computing similarity with candidate profile headline/summary info
+    const [jobVector, candidateVector] = await Promise.all([
+      generateTextEmbedding(jobText),
+      generateTextEmbedding(candidateResumeText),
+    ]);
+    rawCosineSim = calculateCosineSimilarity(jobVector, candidateVector);
+  }
   const semanticScore = Math.round(rawCosineSim * 100);
 
   // 2. Skill Match & Missing Skills Identification (30%)

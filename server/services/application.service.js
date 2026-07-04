@@ -1,5 +1,7 @@
 import * as appRepo from '../repositories/application.repository.js';
 import * as candidateRepo from '../repositories/candidate.repository.js';
+import { matchCandidateToJob } from './semanticMatcher.service.js';
+import prisma from '../config/db.js';
 
 export const applyToJob = async (userId, jobId) => {
   const candidate = await candidateRepo.findCandidateByUserId(userId);
@@ -13,7 +15,21 @@ export const applyToJob = async (userId, jobId) => {
     resumeVersionId = version?.id || null;
   }
 
-  return appRepo.createApplication(candidate.id, jobId, resumeVersionId);
+  const application = await appRepo.createApplication(candidate.id, jobId, resumeVersionId);
+
+  // Calculate composite match score using AI & semantic matching services
+  try {
+    const matchResult = await matchCandidateToJob(candidate.id, jobId);
+    await prisma.application.update({
+      where: { id: application.id },
+      data: { matchScore: matchResult.compositeScore },
+    });
+    application.matchScore = matchResult.compositeScore;
+  } catch (err) {
+    console.warn(`[Match Score Calculation Warning] Failed to compute match score for application: ${err.message}`);
+  }
+
+  return application;
 };
 
 export const withdrawApplication = async (userId, applicationId) => {

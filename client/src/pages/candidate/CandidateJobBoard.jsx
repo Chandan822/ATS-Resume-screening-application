@@ -208,7 +208,7 @@ export function CandidateJobBoard() {
                         : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
                     }`}
                   >
-                    {applyMut.isPending ? 'Applying...' : appliedJobIds.includes(job.id) ? 'Applied' : 'Apply Now'}
+                    {applyMut.isPending && applyMut.variables === job.id ? 'Applying...' : appliedJobIds.includes(job.id) ? 'Applied' : 'Apply Now'}
                   </button>
                 </div>
               </div>
@@ -287,7 +287,7 @@ export function CandidateJobBoard() {
                     : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
                 }`}
               >
-                {applyMut.isPending 
+                {applyMut.isPending && applyMut.variables === selectedJob.id
                   ? 'Applying...' 
                   : appliedJobIds.includes(selectedJob.id) 
                     ? 'Applied' 

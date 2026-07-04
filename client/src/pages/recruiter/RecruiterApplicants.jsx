@@ -17,6 +17,10 @@ export function RecruiterApplicants() {
   const [scheduledAt, setScheduledAt] = useState('');
   const [durationMinutes, setDurationMinutes] = useState(45);
 
+  // Job filter & score ranking states
+  const [selectedJobId, setSelectedJobId] = useState('ALL');
+  const [sortByScore, setSortByScore] = useState('DESC');
+
   const { data: apps, isLoading, isError, refetch } = useQuery({
     queryKey: ['recruiterApps'],
     queryFn: async () => {
@@ -70,7 +74,53 @@ export function RecruiterApplicants() {
     );
   }
 
-  const filteredApps = filterStage === 'ALL' ? apps : apps?.filter((a) => a.status === filterStage);
+  // Extract unique jobs from applications to populate filter dropdown
+  const uniqueJobs = [];
+  const seenJobIds = new Set();
+  if (apps) {
+    for (const app of apps) {
+      if (app.job && !seenJobIds.has(app.job.id)) {
+        seenJobIds.add(app.job.id);
+        uniqueJobs.push(app.job);
+      }
+    }
+  }
+
+  // 1. Stage filter
+  let processedApps = filterStage === 'ALL' ? (apps || []) : (apps || []).filter((a) => a.status === filterStage);
+
+  // 2. Job filter
+  if (selectedJobId !== 'ALL') {
+    processedApps = processedApps.filter((a) => a.job?.id === selectedJobId);
+  }
+
+  // 3. Score sorting
+  if (sortByScore === 'DESC') {
+    processedApps = [...processedApps].sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+  } else if (sortByScore === 'ASC') {
+    processedApps = [...processedApps].sort((a, b) => (a.matchScore || 0) - (b.matchScore || 0));
+  }
+
+  const getScoreBadge = (score) => {
+    if (score === null || score === undefined || score === 0) return <span className="text-slate-400 font-bold">N/A</span>;
+    
+    let colorClasses = 'bg-slate-50 text-slate-600 border border-slate-200';
+    if (score >= 85) {
+      colorClasses = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+    } else if (score >= 70) {
+      colorClasses = 'bg-indigo-50 text-indigo-700 border border-indigo-100';
+    } else if (score >= 55) {
+      colorClasses = 'bg-amber-50 text-amber-700 border border-amber-100';
+    } else {
+      colorClasses = 'bg-rose-50 text-rose-700 border border-rose-100';
+    }
+
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border tracking-tight ${colorClasses}`}>
+        {score}% Match
+      </span>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -99,6 +149,40 @@ export function RecruiterApplicants() {
         ))}
       </div>
 
+      {/* Job Filter & Match Ranking Controls */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white border border-slate-200 rounded-3xl p-4 md:p-6 shadow-xs text-xs font-bold">
+        {/* Job selector */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <label className="text-slate-500 whitespace-nowrap">Filter by Job:</label>
+          <select
+            value={selectedJobId}
+            onChange={(e) => setSelectedJobId(e.target.value)}
+            className="w-full sm:w-64 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-indigo-600 transition font-medium"
+          >
+            <option value="ALL">All Jobs</option>
+            {uniqueJobs.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.title} ({job.department || 'General'})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Match Ranking selector */}
+        <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+          <label className="text-slate-500 whitespace-nowrap">Rank by Score:</label>
+          <select
+            value={sortByScore}
+            onChange={(e) => setSortByScore(e.target.value)}
+            className="w-full sm:w-48 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-indigo-600 transition"
+          >
+            <option value="DESC">Highest Match first</option>
+            <option value="ASC">Lowest Match first</option>
+            <option value="NONE">No Ranking (Date Applied)</option>
+          </select>
+        </div>
+      </div>
+
       {/* Applicants List Table / Cards */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
         <div className="overflow-x-auto">
@@ -108,12 +192,13 @@ export function RecruiterApplicants() {
                 <th className="pb-3">Candidate</th>
                 <th className="pb-3">Applied Position</th>
                 <th className="pb-3">Applied Date</th>
+                <th className="pb-3">ATS Match Score</th>
                 <th className="pb-3">Current Stage</th>
                 <th className="pb-3 text-right">Update Stage</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredApps?.map((app) => (
+              {processedApps?.map((app) => (
                 <tr key={app.id} className="hover:bg-slate-50/80 transition">
                   <td className="py-3.5">
                     <div className="flex items-center gap-3">
@@ -136,6 +221,9 @@ export function RecruiterApplicants() {
                   </td>
                   <td className="py-3.5 text-slate-500 font-medium">
                     {new Date(app.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="py-3.5">
+                    {getScoreBadge(app.matchScore)}
                   </td>
                   <td className="py-3.5">
                     <span
