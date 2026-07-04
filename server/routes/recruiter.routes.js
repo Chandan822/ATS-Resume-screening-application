@@ -4,9 +4,9 @@ import { authenticateJWT, authorizeRoles } from '../middlewares/auth.middleware.
 
 const router = express.Router();
 
-// Guard with JWT and Recruiter/Admin roles
+// Guard with JWT and Recruiter roles
 router.use(authenticateJWT);
-router.use(authorizeRoles('RECRUITER', 'ADMIN'));
+router.use(authorizeRoles('RECRUITER'));
 
 // Dashboard Overview & Analytics & Audit Logs
 router.get('/dashboard/stats', recruiterController.getDashboardStats);

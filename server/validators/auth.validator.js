@@ -11,7 +11,7 @@ export const registerSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
   lastName: z.string().trim().min(1, 'Last name is required'),
   phone: z.string().trim().optional(),
-  role: z.enum(['CANDIDATE', 'RECRUITER', 'ADMIN']).default('CANDIDATE'),
+  role: z.enum(['CANDIDATE', 'RECRUITER']).default('CANDIDATE'),
   // Recruiter specific optional fields
   companyName: z.string().trim().optional(),
   companyWebsite: z.string().trim().optional(),

@@ -44,7 +44,7 @@ const router = express.Router();
 
 // Apply Authentication & Authorization Middleware to all candidate routes
 router.use(authenticateJWT);
-router.use(authorizeRoles('CANDIDATE', 'ADMIN'));
+router.use(authorizeRoles('CANDIDATE'));
 
 // Job Browsing Routes
 router.get('/jobs', candidateController.getJobs);

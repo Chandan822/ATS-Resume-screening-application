@@ -56,7 +56,7 @@ export function Login() {
         </div>
 
         {/* Role Selector Tabs */}
-        <div className="grid grid-cols-3 gap-2 p-1.5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div className="grid grid-cols-2 gap-2 p-1.5 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <button
             type="button"
             onClick={() => setSelectedRole('CANDIDATE')}
@@ -78,17 +78,6 @@ export function Login() {
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" /> Recruiter
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedRole('ADMIN')}
-            className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl transition ${
-              selectedRole === 'ADMIN'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Shield className="w-3.5 h-3.5" /> Admin
           </button>
         </div>
 
@@ -112,9 +101,7 @@ export function Login() {
                   placeholder={
                     selectedRole === 'CANDIDATE'
                       ? 'candidate@example.com'
-                      : selectedRole === 'RECRUITER'
-                      ? 'recruiter@company.com'
-                      : 'admin@aiats.com'
+                      : 'recruiter@company.com'
                   }
                   {...register('email')}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition"

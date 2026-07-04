@@ -31,7 +31,7 @@ import { useAuth } from '../hooks/useAuth';
 
 function DashboardIndexRedirect() {
   const { user } = useAuth();
-  if (user?.role === 'RECRUITER' || user?.role === 'ADMIN') {
+  if (user?.role === 'RECRUITER') {
     return <RecruiterDashboard />;
   }
   return <CandidateJobBoard />;
@@ -39,7 +39,7 @@ function DashboardIndexRedirect() {
 
 function DashboardJobsRoute() {
   const { user } = useAuth();
-  if (user?.role === 'RECRUITER' || user?.role === 'ADMIN') {
+  if (user?.role === 'RECRUITER') {
     return <RecruiterJobs />;
   }
   return <CandidateJobBoard />;
@@ -47,7 +47,7 @@ function DashboardJobsRoute() {
 
 function DashboardApplicationsRoute() {
   const { user } = useAuth();
-  if (user?.role === 'RECRUITER' || user?.role === 'ADMIN') {
+  if (user?.role === 'RECRUITER') {
     return <RecruiterApplicants />;
   }
   return <CandidateApplications />;
@@ -55,7 +55,7 @@ function DashboardApplicationsRoute() {
 
 function DashboardSettingsRoute() {
   const { user } = useAuth();
-  if (user?.role === 'RECRUITER' || user?.role === 'ADMIN') {
+  if (user?.role === 'RECRUITER') {
     return <RecruiterProfile />;
   }
   return <CandidateProfile />;
@@ -87,7 +87,7 @@ export const AppRoutes = () => {
         <Route
           path="recruiter"
           element={
-            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+            <ProtectedRoute allowedRoles={['RECRUITER']}>
               <RecruiterDashboard />
             </ProtectedRoute>
           }
@@ -97,7 +97,7 @@ export const AppRoutes = () => {
         <Route
           path="candidates"
           element={
-            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+            <ProtectedRoute allowedRoles={['RECRUITER']}>
               <RecruiterCandidates />
             </ProtectedRoute>
           }
@@ -106,7 +106,7 @@ export const AppRoutes = () => {
         <Route
           path="saved-jobs"
           element={
-            <ProtectedRoute allowedRoles={['CANDIDATE', 'ADMIN']}>
+            <ProtectedRoute allowedRoles={['CANDIDATE']}>
               <CandidateSavedJobs />
             </ProtectedRoute>
           }
@@ -114,7 +114,7 @@ export const AppRoutes = () => {
         <Route
           path="interviews"
           element={
-            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+            <ProtectedRoute allowedRoles={['RECRUITER']}>
               <RecruiterInterviews />
             </ProtectedRoute>
           }
@@ -123,7 +123,7 @@ export const AppRoutes = () => {
         <Route
           path="companies"
           element={
-            <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+            <ProtectedRoute allowedRoles={['RECRUITER']}>
               <RecruiterCompanies />
             </ProtectedRoute>
           }
@@ -135,7 +135,7 @@ export const AppRoutes = () => {
       <Route
         path="/candidate/*"
         element={
-          <ProtectedRoute allowedRoles={['CANDIDATE', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['CANDIDATE']}>
             <DashboardLayout />
           </ProtectedRoute>
         }
@@ -150,7 +150,7 @@ export const AppRoutes = () => {
       <Route
         path="/recruiter/*"
         element={
-          <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['RECRUITER']}>
             <DashboardLayout />
           </ProtectedRoute>
         }

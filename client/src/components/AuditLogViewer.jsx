@@ -120,7 +120,6 @@ export function AuditLogViewer() {
               <option value="EXTEND_OFFER">Extend Offer</option>
               <option value="REJECT_APPLICATION">Reject Application</option>
               <option value="UPDATE_PROFILE">Update Profile</option>
-              <option value="ADMIN_ACTION">Admin Action</option>
             </select>
           </div>
 
