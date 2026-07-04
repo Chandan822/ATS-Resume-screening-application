@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import env from '../config/env.js';
 import * as userRepository from '../repositories/user.repository.js';
+import { logAuditAction } from '../utils/auditLogger.js';
 
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
@@ -33,14 +34,21 @@ const generateRefreshToken = () => {
  * Sanitize User Object (Strip sensitive fields)
  */
 const sanitizeUser = (user) => {
-  const { _passwordHash, _emailVerificationToken, _passwordResetToken, ...sanitized } = user;
+  const {
+    passwordHash,
+    emailVerificationToken,
+    emailVerificationExpires,
+    passwordResetToken,
+    passwordResetExpires,
+    ...sanitized
+  } = user;
   return sanitized;
 };
 
 /**
  * Register User
  */
-export const registerUser = async (data) => {
+export const registerUser = async (data, req = null) => {
   const existingUser = await userRepository.findUserByEmail(data.email);
   if (existingUser) {
     const error = new Error('Email address is already registered');

@@ -40,7 +40,7 @@ enum ExperienceLevel {
 
 enum JobStatus {
   DRAFT
-  PUBLISHED
+  OPEN
   CLOSED
   ARCHIVED
 }

@@ -1,6 +1,16 @@
 import apiClient from './api';
 
 export const candidateService = {
+  async getJobs(params) {
+    const response = await apiClient.get('/candidate/jobs', { params });
+    return response.data;
+  },
+
+  async getJobById(id) {
+    const response = await apiClient.get(`/candidate/jobs/${id}`);
+    return response.data;
+  },
+
   async getProfile() {
     const response = await apiClient.get('/candidate/profile');
     return response.data;

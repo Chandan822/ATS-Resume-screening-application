@@ -83,8 +83,8 @@ export function RecruiterJobs() {
   const createJobMut = useMutation({
     mutationFn: (payload) => recruiterService.createJob(payload),
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['recruiterJobs']);
-      queryClient.invalidateQueries(['recruiterStats']);
+      queryClient.invalidateQueries({ queryKey: ['recruiterJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['recruiterStats'] });
       closeModal();
       if (data.data) {
         setRecommendationModalJob(data.data);
@@ -95,24 +95,24 @@ export function RecruiterJobs() {
   const updateJobMut = useMutation({
     mutationFn: ({ id, payload }) => recruiterService.updateJob(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['recruiterJobs']);
+      queryClient.invalidateQueries({ queryKey: ['recruiterJobs'] });
       closeModal();
     },
   });
 
   const statusMut = useMutation({
     mutationFn: ({ id, status }) => recruiterService.updateJobStatus(id, status),
-    onSuccess: () => queryClient.invalidateQueries(['recruiterJobs']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recruiterJobs'] }),
   });
 
   const duplicateMut = useMutation({
     mutationFn: (id) => recruiterService.duplicateJob(id),
-    onSuccess: () => queryClient.invalidateQueries(['recruiterJobs']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recruiterJobs'] }),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id) => recruiterService.deleteJob(id),
-    onSuccess: () => queryClient.invalidateQueries(['recruiterJobs']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recruiterJobs'] }),
   });
 
   const openCreateModal = () => {

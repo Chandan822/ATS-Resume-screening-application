@@ -10,7 +10,7 @@ import {
 export const register = async (req, res, next) => {
   try {
     const validatedData = registerSchema.parse(req.body);
-    const result = await authService.registerUser(validatedData);
+    const result = await authService.registerUser(validatedData, req);
 
     return res.status(201).json({
       success: true,
@@ -32,7 +32,7 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const validatedData = loginSchema.parse(req.body);
-    const result = await authService.loginUser(validatedData);
+    const result = await authService.loginUser(validatedData, req);
 
     return res.status(200).json({
       success: true,
@@ -145,7 +145,15 @@ export const verifyEmail = async (req, res, next) => {
 };
 
 export const getMe = async (req, res) => {
-  const { _passwordHash, _emailVerificationToken, _passwordResetToken, ...user } = req.user;
+  // Strip sensitive fields before returning to client
+  const {
+    passwordHash,
+    emailVerificationToken,
+    emailVerificationExpires,
+    passwordResetToken,
+    passwordResetExpires,
+    ...user
+  } = req.user;
 
   return res.status(200).json({
     success: true,

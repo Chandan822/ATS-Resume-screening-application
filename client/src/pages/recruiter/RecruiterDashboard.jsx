@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
 import { Link } from 'react-router-dom';
@@ -14,9 +15,11 @@ import {
   Building2,
   Plus,
   RefreshCw,
+  ShieldCheck,
 } from 'lucide-react';
 
 export function RecruiterDashboard() {
+  const [activeTab, setActiveTab] = useState('overview');
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['recruiterStats'],
     queryFn: async () => {
@@ -225,7 +228,9 @@ export function RecruiterDashboard() {
                     {new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">{act.details}</p>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  {act.details || (act.changes ? JSON.stringify(act.changes).replace(/[{}"]/g, '').slice(0, 80) : act.entity || '')}
+                </p>
               </div>
             ))}
           </div>

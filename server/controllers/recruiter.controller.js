@@ -336,3 +336,22 @@ export const getAuditLogs = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getCandidates = async (req, res, next) => {
+  try {
+    const data = await recruiterService.getCandidates();
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getInterviews = async (req, res, next) => {
+  try {
+    const data = await recruiterService.getInterviews(req.user.id);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+

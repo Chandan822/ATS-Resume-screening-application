@@ -103,6 +103,16 @@ export const recruiterService = {
     const response = await apiClient.get(`/recruiter/jobs/${jobId}/recommendations`);
     return response.data;
   },
+
+  async getCandidates() {
+    const response = await apiClient.get('/recruiter/candidates');
+    return response.data;
+  },
+
+  async getInterviews() {
+    const response = await apiClient.get('/recruiter/interviews');
+    return response.data;
+  },
 };
 
 export default recruiterService;

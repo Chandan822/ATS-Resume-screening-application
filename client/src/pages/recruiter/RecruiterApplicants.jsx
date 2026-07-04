@@ -22,8 +22,8 @@ export function RecruiterApplicants() {
   const updateStageMut = useMutation({
     mutationFn: ({ id, status }) => recruiterService.updateApplicationStatus(id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries(['recruiterApps']);
-      queryClient.invalidateQueries(['recruiterStats']);
+      queryClient.invalidateQueries({ queryKey: ['recruiterApps'] });
+      queryClient.invalidateQueries({ queryKey: ['recruiterStats'] });
     },
   });
 
@@ -61,7 +61,7 @@ export function RecruiterApplicants() {
 
       {/* Stage Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto text-xs font-bold">
-        {['ALL', 'APPLIED', 'SCREENING', 'INTERVIEW', 'OFFERED', 'HIRED', 'REJECTED'].map((stage) => (
+        {['ALL', 'APPLIED', 'SCREENING', 'INTERVIEW_SCHEDULED', 'OFFERED', 'HIRED', 'REJECTED'].map((stage) => (
           <button
             key={stage}
             onClick={() => setFilterStage(stage)}
@@ -119,7 +119,7 @@ export function RecruiterApplicants() {
                       className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
                         app.status === 'OFFERED' || app.status === 'HIRED'
                           ? 'bg-emerald-100 text-emerald-800'
-                          : app.status === 'INTERVIEW'
+                          : app.status === 'INTERVIEW_SCHEDULED'
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-indigo-50 text-indigo-700'
                       }`}
@@ -150,7 +150,7 @@ export function RecruiterApplicants() {
                       >
                         <option value="APPLIED">Applied</option>
                         <option value="SCREENING">Screening</option>
-                        <option value="INTERVIEW">Interview</option>
+                        <option value="INTERVIEW_SCHEDULED">Interview</option>
                         <option value="OFFERED">Offered</option>
                         <option value="HIRED">Hired</option>
                         <option value="REJECTED">Rejected</option>

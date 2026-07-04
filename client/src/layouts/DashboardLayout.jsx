@@ -21,6 +21,7 @@ import {
   Sparkles,
   ShieldCheck,
   CheckCircle2,
+  Bookmark,
 } from 'lucide-react';
 
 export function DashboardLayout() {
@@ -33,7 +34,15 @@ export function DashboardLayout() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const navItems = [
+  const candidateNavItems = [
+    { name: 'Job Openings', path: '/dashboard/jobs', icon: Briefcase },
+    { name: 'My Applications', path: '/dashboard/applications', icon: FileText },
+    { name: 'Saved Jobs', path: '/dashboard/saved-jobs', icon: Bookmark },
+    { name: 'My Profile', path: '/dashboard/profile', icon: User },
+    { name: 'Settings', path: '/dashboard/settings', icon: Settings },
+  ];
+
+  const recruiterNavItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Job Openings', path: '/dashboard/jobs', icon: Briefcase },
     { name: 'Candidates', path: '/dashboard/candidates', icon: Users },
@@ -42,6 +51,8 @@ export function DashboardLayout() {
     { name: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
     { name: 'Settings', path: '/dashboard/settings', icon: Settings },
   ];
+
+  const navItems = user?.role === 'CANDIDATE' ? candidateNavItems : recruiterNavItems;
 
   const pathSegments = location.pathname.split('/').filter(Boolean);
   const breadcrumbs = pathSegments.map((segment, index) => {

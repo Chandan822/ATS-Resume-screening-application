@@ -44,4 +44,8 @@ router.get('/interviews/:roundId/feedback', recruiterController.getInterviewFeed
 router.get('/applications', recruiterController.getApplications);
 router.put('/applications/:id/status', recruiterController.updateApplicationStatus);
 
+// Candidates list & Interviews list Endpoints
+router.get('/candidates', recruiterController.getCandidates);
+router.get('/interviews', recruiterController.getInterviews);
+
 export default router;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { candidateService } from '../../services/candidateService';
 import AtsScoreDashboard from '../../components/AtsScoreDashboard';
 import ResumeComparisonView from './ResumeComparisonView';
@@ -25,11 +26,17 @@ import {
   Sparkles,
   RefreshCw,
   X,
+  TrendingUp,
+  Code,
 } from 'lucide-react';
 
 export function CandidateProfile() {
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const isSettingsPage = location.pathname.endsWith('settings');
   const [activeTab, setActiveTab] = useState('profile');
+  const currentTab = isSettingsPage ? 'profile' : activeTab;
+
   const [showSocialModal, setShowSocialModal] = useState(false); // overview | education | experience | projects | skills | certificates | resumes
 
   // Modals state
@@ -65,7 +72,7 @@ export function CandidateProfile() {
     queryKey: ['candidateProfile'],
     queryFn: async () => {
       const res = await candidateService.getProfile();
-      const c = res.data.candidate;
+      const c = res.data?.candidate || {};
       setBasicForm({
         headline: c.headline || '',
         summary: c.summary || '',
@@ -216,10 +223,10 @@ export function CandidateProfile() {
             </div>
             <div>
               <h2 className="text-xl md:text-2xl font-extrabold text-slate-900">
-                {candidate.user?.firstName} {candidate.user?.lastName}
+                {isSettingsPage ? 'Account Profile Settings' : `${candidate.user?.firstName} ${candidate.user?.lastName}`}
               </h2>
               <p className="text-xs font-semibold text-indigo-600 mt-0.5">
-                {candidate.headline || 'Add professional headline (e.g. Senior Full Stack Engineer)'}
+                {isSettingsPage ? 'Manage your basic profile info and professional summary' : (candidate.headline || 'Add professional headline (e.g. Senior Full Stack Engineer)')}
               </p>
               <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
                 <span>{candidate.user?.email}</span>
@@ -233,62 +240,65 @@ export function CandidateProfile() {
           </div>
 
           {/* Completion Progress Bar */}
-          <div className="w-full md:w-64 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setShowSocialModal(true)}
-                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs inline-flex items-center gap-2 transition shadow-sm"
-              >
-                <Github className="w-4 h-4 text-white" /> Connect GitHub & LinkedIn
-              </button>
-              <div className="px-4 py-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600" /> Completion: {completionScore}%
+          {!isSettingsPage && (
+            <div className="w-full md:w-64 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setShowSocialModal(true)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs inline-flex items-center gap-2 transition shadow-sm"
+                >
+                  <Github className="w-4 h-4 text-white" /> Connect GitHub & LinkedIn
+                </button>
+                <div className="px-4 py-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-600" /> Completion: {completionScore}%
+                </div>
+              </div>
+              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                <div
+                  className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                  style={{ width: `${completionScore}%` }}
+                />
               </div>
             </div>
-            <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-              <div
-                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
-                style={{ width: `${completionScore}%` }}
-              />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 overflow-x-auto text-xs font-bold">
-          {[
-            { id: 'profile', label: 'Basic Info', icon: User },
-            { id: 'resumes', label: 'Resume Files', icon: FileText },
-            { id: 'compare', label: 'Compare Resumes', icon: TrendingUp },
-            { id: 'experience', label: 'Work Experience', icon: Briefcase },
-            { id: 'education', label: 'Education', icon: GraduationCap },
-            { id: 'skills', label: 'Skills & Tech Stack', icon: Code },
-            { id: 'certificates', label: 'Certificates', icon: Award },
-            { id: 'languages', label: 'Languages', icon: Globe },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3.5 border-b-2 font-bold whitespace-nowrap transition ${
-                  activeTab === tab.id
-                    ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50'
-                    : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        {!isSettingsPage && (
+          <div className="flex border-b border-slate-200 overflow-x-auto text-xs font-bold">
+            {[
+              { id: 'profile', label: 'Basic Info', icon: User },
+              { id: 'resumes', label: 'Resume Files', icon: FileText },
+              { id: 'compare', label: 'Compare Resumes', icon: TrendingUp },
+              { id: 'experience', label: 'Work Experience', icon: Briefcase },
+              { id: 'education', label: 'Education', icon: GraduationCap },
+              { id: 'skills', label: 'Skills & Tech Stack', icon: Code },
+              { id: 'certificates', label: 'Certificates', icon: Award },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-3.5 border-b-2 font-bold whitespace-nowrap transition ${
+                    activeTab === tab.id
+                      ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50'
+                      : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Tab Content Panels */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
         {/* TAB 1: OVERVIEW */}
-        {activeTab === 'overview' && (
+        {currentTab === 'profile' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-bold text-base text-slate-900">Personal & Professional Summary</h3>
@@ -500,7 +510,7 @@ export function CandidateProfile() {
         )}
 
         {/* TAB 2: EDUCATION */}
-        {activeTab === 'education' && (
+        {currentTab === 'education' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-bold text-base text-slate-900">Academic Background</h3>
@@ -541,9 +551,9 @@ export function CandidateProfile() {
         )}
 
         {/* TAB 3: COMPARE RESUMES SIDE-BY-SIDE */}
-        {activeTab === 'compare' && <ResumeComparisonView />}
+        {currentTab === 'compare' && <ResumeComparisonView />}
         {/* TAB 3: EXPERIENCE */}
-        {activeTab === 'experience' && (
+        {currentTab === 'experience' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-bold text-base text-slate-900">Work History</h3>
@@ -583,7 +593,7 @@ export function CandidateProfile() {
         )}
 
         {/* TAB 4: PROJECTS */}
-        {activeTab === 'projects' && (
+        {currentTab === 'projects' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-bold text-base text-slate-900">Portfolio Projects</h3>
@@ -634,7 +644,7 @@ export function CandidateProfile() {
         )}
 
         {/* TAB 5: SKILLS */}
-        {activeTab === 'skills' && (
+        {currentTab === 'skills' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-bold text-base text-slate-900">Skills Taxonomy</h3>
@@ -673,7 +683,7 @@ export function CandidateProfile() {
         )}
 
         {/* TAB 6: CERTIFICATES */}
-        {activeTab === 'certificates' && (
+        {currentTab === 'certificates' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-bold text-base text-slate-900">Certifications & Credentials</h3>
@@ -710,7 +720,7 @@ export function CandidateProfile() {
         )}
 
         {/* TAB 7: RESUMES */}
-        {activeTab === 'resumes' && (
+        {currentTab === 'resumes' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-bold text-base text-slate-900">Uploaded Resume Files & Extracted Text Pipeline</h3>

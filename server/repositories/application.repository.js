@@ -58,7 +58,7 @@ export const getCandidateApplications = async (candidateId) => {
  */
 export const saveJobRecord = async (userId, jobId) => {
   const existing = await prisma.savedSearch.findFirst({
-    where: { userId, title: `JOB_${jobId}` },
+    where: { userId, name: `JOB_${jobId}` },
   });
 
   if (existing) return existing;
@@ -66,8 +66,8 @@ export const saveJobRecord = async (userId, jobId) => {
   return prisma.savedSearch.create({
     data: {
       userId,
-      title: `JOB_${jobId}`,
-      filters: { jobId },
+      name: `JOB_${jobId}`,
+      searchCriteria: { jobId },
     },
   });
 };
@@ -77,7 +77,7 @@ export const saveJobRecord = async (userId, jobId) => {
  */
 export const removeSavedJobRecord = async (userId, jobId) => {
   return prisma.savedSearch.deleteMany({
-    where: { userId, title: `JOB_${jobId}` },
+    where: { userId, name: `JOB_${jobId}` },
   });
 };
 
@@ -86,11 +86,11 @@ export const removeSavedJobRecord = async (userId, jobId) => {
  */
 export const getSavedJobsList = async (userId) => {
   const savedSearches = await prisma.savedSearch.findMany({
-    where: { userId, title: { startsWith: 'JOB_' } },
+    where: { userId, name: { startsWith: 'JOB_' } },
   });
 
   const jobIds = savedSearches
-    .map((s) => s.filters?.jobId)
+    .map((s) => s.searchCriteria?.jobId)
     .filter(Boolean);
 
   if (jobIds.length === 0) return [];

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { recruiterService } from '../../services/recruiterService';
 import { candidateService } from '../../services/candidateService';
 import {
   Briefcase,
@@ -26,7 +25,7 @@ export function CandidateJobBoard() {
   const { data: responseData, isLoading, isError, refetch } = useQuery({
     queryKey: ['candidateJobs', searchQuery, filterDept],
     queryFn: async () => {
-      const res = await recruiterService.getJobs({
+      const res = await candidateService.getJobs({
         query: searchQuery || undefined,
         department: filterDept !== 'ALL' ? filterDept : undefined,
         status: 'OPEN',
@@ -53,7 +52,7 @@ export function CandidateJobBoard() {
     mutationFn: (jobId) => candidateService.applyToJob(jobId),
     onSuccess: (data) => {
       alert(data.message || 'Application submitted successfully!');
-      queryClient.invalidateQueries(['candidateApplications']);
+      queryClient.invalidateQueries({ queryKey: ['candidateApplications'] });
       setSelectedJob(null);
     },
     onError: (err) => {
@@ -70,7 +69,7 @@ export function CandidateJobBoard() {
       return candidateService.saveJob(jobId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateSavedJobs']);
+      queryClient.invalidateQueries({ queryKey: ['candidateSavedJobs'] });
     },
   });
 

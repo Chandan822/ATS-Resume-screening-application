@@ -135,6 +135,7 @@ export function Register() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <input type="hidden" {...register('role')} />
             {/* First & Last Name */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

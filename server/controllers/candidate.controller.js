@@ -1,5 +1,7 @@
 import * as candidateService from '../services/candidate.service.js';
 import * as socialService from '../services/socialIntegration.service.js';
+import * as jobService from '../services/job.service.js';
+import { jobQuerySchema } from '../validators/job.validator.js';
 import {
   updateProfileSchema,
   educationSchema,
@@ -8,6 +10,25 @@ import {
   skillSchema,
   certificateSchema,
 } from '../validators/candidate.validator.js';
+
+export const getJobs = async (req, res, next) => {
+  try {
+    const queryParams = jobQuerySchema.parse(req.query);
+    const result = await jobService.listCandidateJobs(queryParams);
+    return res.status(200).json({ success: true, data: result.jobs, pagination: result.pagination });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getJobById = async (req, res, next) => {
+  try {
+    const job = await jobService.getJobById(req.params.id);
+    return res.status(200).json({ success: true, data: job });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getProfile = async (req, res, next) => {
   try {

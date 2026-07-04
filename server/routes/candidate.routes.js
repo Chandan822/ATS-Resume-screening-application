@@ -46,6 +46,10 @@ const router = express.Router();
 router.use(authenticateJWT);
 router.use(authorizeRoles('CANDIDATE', 'ADMIN'));
 
+// Job Browsing Routes
+router.get('/jobs', candidateController.getJobs);
+router.get('/jobs/:id', candidateController.getJobById);
+
 // Profile Basic Info
 router.get('/profile', candidateController.getProfile);
 router.put('/profile', candidateController.updateProfile);

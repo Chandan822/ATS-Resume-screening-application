@@ -16,7 +16,7 @@ export function CandidateApplications() {
   const withdrawMut = useMutation({
     mutationFn: (id) => candidateService.withdrawApplication(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateApplications']);
+      queryClient.invalidateQueries({ queryKey: ['candidateApplications'] });
     },
   });
 
@@ -40,7 +40,7 @@ export function CandidateApplications() {
     );
   }
 
-  const stagesOrder = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFERED', 'HIRED'];
+  const stagesOrder = ['APPLIED', 'SCREENING', 'INTERVIEW_SCHEDULED', 'OFFERED', 'HIRED'];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">

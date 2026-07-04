@@ -33,7 +33,7 @@ export const getRecruiterStats = async (userId) => {
   });
 
   // Stage breakdown
-  const stages = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFERED', 'HIRED', 'REJECTED'];
+  const stages = ['APPLIED', 'SCREENING', 'INTERVIEW_SCHEDULED', 'OFFERED', 'HIRED', 'REJECTED'];
   const stageCounts = {};
   for (const stage of stages) {
     stageCounts[stage] = await prisma.application.count({
@@ -45,7 +45,7 @@ export const getRecruiterStats = async (userId) => {
   const recentAuditLogs = await prisma.auditLog.findMany({
     take: 6,
     orderBy: { createdAt: 'desc' },
-    select: { id: true, action: true, details: true, createdAt: true },
+    select: { id: true, action: true, entity: true, changes: true, createdAt: true },
   });
 
   return {
@@ -87,26 +87,26 @@ export const createJobOpening = async (userId, data) => {
     let defaultCompany = await prisma.company.findFirst();
     if (!defaultCompany) {
       defaultCompany = await prisma.company.create({
-        data: { name: 'TechCorp Global', industry: 'Software', location: 'San Francisco, CA' },
+        data: { name: 'TechCorp Global', slug: 'techcorp-global', industry: 'Software', location: 'San Francisco, CA' },
       });
     }
     recruiter = await prisma.recruiter.create({
-      data: { userId, companyId: defaultCompany.id, title: 'Hiring Manager' },
+      data: { userId, companyId: defaultCompany.id, designation: 'Hiring Manager' },
     });
   }
 
   return prisma.job.create({
     data: {
       companyId: recruiter.companyId,
-      postedById: recruiter.id,
+      recruiterId: recruiter.id,
       title: data.title,
       description: data.description || 'Job description',
       department: data.department || 'Engineering',
       location: data.location || 'Remote',
-      type: data.type || 'FULL_TIME',
-      experienceMinLevel: data.experienceMinLevel || 0,
-      salaryMin: data.salaryMin ? parseFloat(data.salaryMin) : null,
-      salaryMax: data.salaryMax ? parseFloat(data.salaryMax) : null,
+      jobType: data.jobType || 'FULL_TIME',
+      experienceLevel: data.experienceLevel || 'MID',
+      minSalary: data.minSalary ? parseFloat(data.minSalary) : null,
+      maxSalary: data.maxSalary ? parseFloat(data.maxSalary) : null,
       status: 'OPEN',
     },
   });
@@ -142,3 +142,44 @@ export const updateApplicationStage = async (applicationId, status) => {
     data: { status },
   });
 };
+
+/**
+ * Get All Candidates (Global Talent Pool)
+ */
+export const getAllCandidatesList = async () => {
+  return prisma.candidate.findMany({
+    include: {
+      user: {
+        select: { id: true, firstName: true, lastName: true, email: true, phone: true, avatarUrl: true },
+      },
+      candidateSkills: { include: { skill: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+/**
+ * Get Company Scheduled Interviews
+ */
+export const getInterviewsList = async (userId) => {
+  const recruiter = await prisma.recruiter.findUnique({ where: { userId } });
+  const companyId = recruiter?.companyId || null;
+
+  return prisma.interviewRound.findMany({
+    where: companyId ? { application: { job: { companyId } } } : {},
+    include: {
+      application: {
+        include: {
+          job: { select: { id: true, title: true, department: true } },
+          candidate: {
+            include: {
+              user: { select: { firstName: true, lastName: true, email: true } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { scheduledAt: 'asc' },
+  });
+};
+

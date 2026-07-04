@@ -7,11 +7,11 @@ const getRecruiterDetails = async (userId) => {
     let company = await prisma.company.findFirst();
     if (!company) {
       company = await prisma.company.create({
-        data: { name: 'TechCorp Global', industry: 'Software', location: 'San Francisco, CA' },
+        data: { name: 'TechCorp Global', slug: 'techcorp-global', industry: 'Software', location: 'San Francisco, CA' },
       });
     }
     recruiter = await prisma.recruiter.create({
-      data: { userId, companyId: company.id, title: 'Hiring Manager' },
+      data: { userId, companyId: company.id, designation: 'Hiring Manager' },
     });
   }
   return recruiter;
@@ -20,6 +20,10 @@ const getRecruiterDetails = async (userId) => {
 export const listJobs = async (userId, params) => {
   const recruiter = await getRecruiterDetails(userId);
   return jobRepo.findJobs({ ...params, companyId: recruiter.companyId });
+};
+
+export const listCandidateJobs = async (params) => {
+  return jobRepo.findJobs({ ...params, status: params.status || 'OPEN' });
 };
 
 export const getJobById = async (id) => {

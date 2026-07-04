@@ -11,6 +11,7 @@ import Unauthorized from '../pages/Unauthorized';
 import CandidateProfile from '../pages/candidate/CandidateProfile';
 import CandidateJobBoard from '../pages/candidate/CandidateJobBoard';
 import CandidateApplications from '../pages/candidate/CandidateApplications';
+import CandidateSavedJobs from '../pages/candidate/CandidateSavedJobs';
 
 // Recruiter Pages
 import RecruiterDashboard from '../pages/recruiter/RecruiterDashboard';
@@ -18,6 +19,11 @@ import RecruiterJobs from '../pages/recruiter/RecruiterJobs';
 import RecruiterApplicants from '../pages/recruiter/RecruiterApplicants';
 import RecruiterAnalytics from '../pages/recruiter/RecruiterAnalytics';
 import RecruiterCompanies from '../pages/recruiter/RecruiterCompanies';
+import RecruiterCandidates from '../pages/recruiter/RecruiterCandidates';
+import RecruiterInterviews from '../pages/recruiter/RecruiterInterviews';
+import RecruiterProfile from '../pages/recruiter/RecruiterProfile';
+
+
 
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProtectedRoute from './ProtectedRoute';
@@ -47,6 +53,15 @@ function DashboardApplicationsRoute() {
   return <CandidateApplications />;
 }
 
+function DashboardSettingsRoute() {
+  const { user } = useAuth();
+  if (user?.role === 'RECRUITER' || user?.role === 'ADMIN') {
+    return <RecruiterProfile />;
+  }
+  return <CandidateProfile />;
+}
+
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -72,13 +87,13 @@ export const AppRoutes = () => {
         <Route path="recruiter" element={<RecruiterDashboard />} />
         <Route path="profile" element={<CandidateProfile />} />
         <Route path="jobs" element={<DashboardJobsRoute />} />
-        <Route path="candidates" element={<RecruiterApplicants />} />
+        <Route path="candidates" element={<RecruiterCandidates />} />
         <Route path="applications" element={<DashboardApplicationsRoute />} />
-        <Route path="saved-jobs" element={<CandidateJobBoard />} />
-        <Route path="interviews" element={<DashboardApplicationsRoute />} />
+        <Route path="saved-jobs" element={<CandidateSavedJobs />} />
+        <Route path="interviews" element={<RecruiterInterviews />} />
         <Route path="analytics" element={<RecruiterAnalytics />} />
         <Route path="companies" element={<RecruiterCompanies />} />
-        <Route path="settings" element={<CandidateProfile />} />
+        <Route path="settings" element={<DashboardSettingsRoute />} />
       </Route>
 
       {/* Candidate Dedicated Profile Routes */}
@@ -108,6 +123,8 @@ export const AppRoutes = () => {
         <Route index element={<RecruiterDashboard />} />
         <Route path="jobs" element={<RecruiterJobs />} />
         <Route path="applicants" element={<RecruiterApplicants />} />
+        <Route path="candidates" element={<RecruiterCandidates />} />
+        <Route path="interviews" element={<RecruiterInterviews />} />
         <Route path="analytics" element={<RecruiterAnalytics />} />
         <Route path="companies" element={<RecruiterCompanies />} />
       </Route>
