@@ -46,7 +46,7 @@ export function NotificationCenter() {
     socket.emit('join_user_room', user.id);
 
     socket.on('new_notification', (newNotif) => {
-      queryClient.invalidateQueries(['userNotifications']);
+      queryClient.invalidateQueries({ queryKey: ['userNotifications'] });
     });
 
     return () => {
@@ -57,17 +57,17 @@ export function NotificationCenter() {
   // Mutations
   const markReadMut = useMutation({
     mutationFn: (id) => notificationService.markAsRead(id),
-    onSuccess: () => queryClient.invalidateQueries(['userNotifications']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userNotifications'] }),
   });
 
   const markAllReadMut = useMutation({
     mutationFn: () => notificationService.markAllAsRead(),
-    onSuccess: () => queryClient.invalidateQueries(['userNotifications']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userNotifications'] }),
   });
 
   const testTriggerMut = useMutation({
     mutationFn: (type) => notificationService.triggerTestNotification(type),
-    onSuccess: () => queryClient.invalidateQueries(['userNotifications']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userNotifications'] }),
   });
 
   const filteredNotifs =

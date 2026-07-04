@@ -92,7 +92,7 @@ export function CandidateProfile() {
   const updateProfileMut = useMutation({
     mutationFn: (payload) => candidateService.updateProfile(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateProfile']);
+      queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
       setIsEditingBasic(false);
     },
   });
@@ -100,7 +100,7 @@ export function CandidateProfile() {
   const addEduMut = useMutation({
     mutationFn: (payload) => candidateService.addEducation(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateProfile']);
+      queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
       setShowEduModal(false);
       setEduForm({ institution: '', degree: '', fieldOfStudy: '', startDate: '', endDate: '', grade: '' });
     },
@@ -108,13 +108,13 @@ export function CandidateProfile() {
 
   const deleteEduMut = useMutation({
     mutationFn: (id) => candidateService.deleteEducation(id),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const addExpMut = useMutation({
     mutationFn: (payload) => candidateService.addExperience(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateProfile']);
+      queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
       setShowExpModal(false);
       setExpForm({ companyName: '', jobTitle: '', location: '', startDate: '', endDate: '', description: '' });
     },
@@ -122,13 +122,13 @@ export function CandidateProfile() {
 
   const deleteExpMut = useMutation({
     mutationFn: (id) => candidateService.deleteExperience(id),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const addProjMut = useMutation({
     mutationFn: (payload) => candidateService.addProject(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateProfile']);
+      queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
       setShowProjModal(false);
       setProjForm({ title: '', description: '', projectUrl: '', githubUrl: '' });
     },
@@ -136,13 +136,13 @@ export function CandidateProfile() {
 
   const deleteProjMut = useMutation({
     mutationFn: (id) => candidateService.deleteProject(id),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const addSkillMut = useMutation({
     mutationFn: (payload) => candidateService.addSkill(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateProfile']);
+      queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
       setShowSkillModal(false);
       setSkillForm({ skillName: '', yearsOfExperience: 2, proficiencyLevel: 'INTERMEDIATE' });
     },
@@ -150,13 +150,13 @@ export function CandidateProfile() {
 
   const deleteSkillMut = useMutation({
     mutationFn: (id) => candidateService.deleteSkill(id),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const addCertMut = useMutation({
     mutationFn: (payload) => candidateService.addCertificate(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['candidateProfile']);
+      queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
       setShowCertModal(false);
       setCertForm({ name: '', issuingOrganization: '', credentialId: '', credentialUrl: '' });
     },
@@ -164,22 +164,22 @@ export function CandidateProfile() {
 
   const deleteCertMut = useMutation({
     mutationFn: (id) => candidateService.deleteCertificate(id),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const uploadResumeMut = useMutation({
     mutationFn: (file) => candidateService.uploadResume(file),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const deleteResumeMut = useMutation({
     mutationFn: (id) => candidateService.deleteResume(id),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const parseAiMut = useMutation({
     mutationFn: (resumeFileId) => candidateService.parseResumeAI(resumeFileId),
-    onSuccess: () => queryClient.invalidateQueries(['candidateProfile']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
   });
 
   const scoreMut = useMutation({

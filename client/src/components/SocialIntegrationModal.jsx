@@ -53,7 +53,7 @@ export function SocialIntegrationModal({ onClose }) {
     mutationFn: () => candidateService.syncMergeSocialProfile(githubData, linkedinData),
     onSuccess: () => {
       alert('GitHub & LinkedIn data merged into candidate profile database successfully!');
-      queryClient.invalidateQueries(['candidateProfile']);
+      queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
       onClose();
     },
   });
@@ -198,6 +198,19 @@ export function SocialIntegrationModal({ onClose }) {
                     ))}
                   </div>
                 </div>
+
+                {githubData.extractedSkills && githubData.extractedSkills.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    <span className="font-bold text-slate-700 block text-[11px]">Extracted README Skills</span>
+                    <div className="flex flex-wrap gap-1">
+                      {githubData.extractedSkills.map((s) => (
+                        <span key={s} className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100 font-extrabold text-[10px]">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2 pt-2">
                   <span className="font-bold text-slate-700 block text-[11px]">Pinned Repositories & README Summaries</span>
