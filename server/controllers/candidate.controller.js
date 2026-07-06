@@ -321,29 +321,11 @@ export const fetchGitHubIntegration = async (req, res, next) => {
   }
 };
 
-export const fetchLinkedInIntegration = async (req, res, next) => {
-  try {
-    const { linkedinUrl, grantPermission } = req.body;
-    if (!grantPermission) {
-      return res.status(403).json({ success: false, message: 'Explicit user permission consent is required to fetch LinkedIn profile data.' });
-    }
-    const result = await socialService.fetchLinkedInData(linkedinUrl);
-    return res.status(200).json({
-      success: true,
-      message: 'LinkedIn profile headline, experiences, educations, and skills fetched successfully',
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const syncMergeSocialProfile = async (req, res, next) => {
   try {
-    const { githubData, linkedinData } = req.body;
+    const { githubData } = req.body;
     const result = await socialService.mergeSocialDataToCandidateProfile(req.user.id, {
       githubData,
-      linkedinData,
     });
     return res.status(200).json({
       success: true,

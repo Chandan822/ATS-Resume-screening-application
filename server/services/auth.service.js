@@ -98,11 +98,19 @@ export const registerUser = async (data, req = null) => {
 /**
  * Login User
  */
-export const loginUser = async ({ email, password }, req = null) => {
+export const loginUser = async ({ email, password, role }, req = null) => {
   const user = await userRepository.findUserByEmail(email);
   if (!user) {
     const error = new Error('Invalid email or password');
     error.statusCode = 401;
+    throw error;
+  }
+
+  if (role && user.role !== role) {
+    const actualRole = user.role.charAt(0) + user.role.slice(1).toLowerCase();
+    const requestedRole = role.charAt(0) + role.slice(1).toLowerCase();
+    const error = new Error(`Access denied. Account is registered as a ${actualRole}, not a ${requestedRole}.`);
+    error.statusCode = 403;
     throw error;
   }
 

@@ -23,7 +23,7 @@ async function run() {
     console.log('GitHub Data Extracted Skills:', githubData.extractedSkills);
     
     console.log('Running mergeSocialDataToCandidateProfile...');
-    const mergeResult = await mergeSocialDataToCandidateProfile(user.id, { githubData, linkedinData: null });
+    const mergeResult = await mergeSocialDataToCandidateProfile(user.id, { githubData });
     
     console.log('Merge completed successfully!');
     console.log('Result:', mergeResult);

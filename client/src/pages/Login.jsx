@@ -31,7 +31,7 @@ export function Login() {
     setApiError('');
     setIsSubmitting(true);
     try {
-      await login(data);
+      await login({ ...data, role: selectedRole });
       navigate('/dashboard');
     } catch (err) {
       setApiError(err.response?.data?.message || 'Login failed. Please check your credentials.');

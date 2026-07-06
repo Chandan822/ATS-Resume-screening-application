@@ -258,56 +258,9 @@ export const fetchGitHubData = async (username) => {
 };
 
 /**
- * Parse LinkedIn Public Profile Data
- */
-export const fetchLinkedInData = async (linkedinUrlOrHandle) => {
-  if (!linkedinUrlOrHandle || linkedinUrlOrHandle.trim() === '') {
-    throw new Error('LinkedIn profile URL or handle is required');
-  }
-
-  const handle = linkedinUrlOrHandle.trim().replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '').replace(/\/$/, '');
-
-  return {
-    handle,
-    profileUrl: `https://linkedin.com/in/${handle}`,
-    headline: 'Senior Software Engineer | Full Stack Developer | React & Node.js Specialist',
-    experiences: [
-      {
-        company: 'TechCorp Global',
-        title: 'Senior Full Stack Engineer',
-        startDate: '2023-01-01',
-        endDate: null,
-        isCurrent: true,
-        location: 'San Francisco, CA',
-        description: 'Led development of microservices architecture, reduced API latency by 35%, and mentored 4 junior developers.',
-      },
-      {
-        company: 'InnovateX Labs',
-        title: 'Software Engineer',
-        startDate: '2020-06-01',
-        endDate: '2022-12-31',
-        isCurrent: false,
-        location: 'San Jose, CA',
-        description: 'Built customer-facing React web applications and implemented RESTful APIs with Node.js and PostgreSQL.',
-      },
-    ],
-    educations: [
-      {
-        institution: 'University of California, Berkeley',
-        degree: 'Bachelor of Science',
-        fieldOfStudy: 'Computer Science',
-        startDate: '2016-09-01',
-        endDate: '2020-05-30',
-      },
-    ],
-    skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Docker', 'AWS', 'REST APIs', 'System Design'],
-  };
-};
-
-/**
  * Merge Fetched Social Data into Candidate Database Profile
  */
-export const mergeSocialDataToCandidateProfile = async (userId, { githubData, linkedinData }) => {
+export const mergeSocialDataToCandidateProfile = async (userId, { githubData }) => {
   let candidate = await candidateRepo.findCandidateByUserId(userId);
 
   if (!candidate) {
@@ -334,14 +287,6 @@ export const mergeSocialDataToCandidateProfile = async (userId, { githubData, li
     });
   }
 
-  if (linkedinData?.skills) {
-    linkedinData.skills.forEach((s) => {
-      if (!existingSkills.includes(s.toLowerCase()) && !newSkills.includes(s)) {
-        newSkills.push(s);
-      }
-    });
-  }
-
   // Save new skills into database using repository helper
   for (const skillName of newSkills) {
     await candidateRepo.addCandidateSkill(candidate.id, skillName, 'TECHNICAL', 2, 'ADVANCED').catch((err) => {
@@ -351,10 +296,8 @@ export const mergeSocialDataToCandidateProfile = async (userId, { githubData, li
 
   // Merge Headline & Bio
   const updatedData = {};
-  if (linkedinData?.headline) updatedData.headline = linkedinData.headline;
   if (githubData?.bio && !candidate.summary) updatedData.summary = githubData.bio;
   if (githubData?.username) updatedData.githubUrl = `https://github.com/${githubData.username}`;
-  if (linkedinData?.profileUrl) updatedData.linkedinUrl = linkedinData.profileUrl;
 
   if (Object.keys(updatedData).length > 0) {
     await candidateRepo.updateCandidateProfile(candidate.id, updatedData);
@@ -363,6 +306,7 @@ export const mergeSocialDataToCandidateProfile = async (userId, { githubData, li
   return {
     candidateId: candidate.id,
     skillsAdded: newSkills,
-    mergedHeadline: updatedData.headline || candidate.headline,
+    mergedHeadline: candidate.headline,
   };
 };
+

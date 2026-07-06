@@ -21,6 +21,7 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().trim().email('Invalid email format'),
   password: z.string().min(1, 'Password is required'),
+  role: z.enum(['CANDIDATE', 'RECRUITER', 'ADMIN']).optional(),
 });
 
 export const forgotPasswordSchema = z.object({
