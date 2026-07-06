@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { recruiterService } from '../../services/recruiterService';
 import InclusiveJobEditor from '../../components/InclusiveJobEditor';
 import CandidateRecommendationModal from '../../components/CandidateRecommendationModal';
@@ -29,12 +29,21 @@ export function RecruiterJobs() {
 
   // Search, Filter & Pagination State
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [filterDept, setFilterDept] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterType, setFilterType] = useState('ALL');
   const [sortBy, setSortBy] = useState('createdAt');
   const [page, setPage] = useState(1);
   const limit = 6;
+
+  // Debounce search query by 300ms
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   // Modals state
   const [showModal, setShowModal] = useState(false);
@@ -61,12 +70,12 @@ export function RecruiterJobs() {
 
   // Query Jobs API with pagination, search, sorting, and filters
   const { data: responseData, isLoading, isError, refetch } = useQuery({
-    queryKey: ['recruiterJobs', page, searchQuery, filterDept, filterStatus, filterType, sortBy],
+    queryKey: ['recruiterJobs', page, debouncedQuery, filterDept, filterStatus, filterType, sortBy],
     queryFn: async () => {
       const res = await recruiterService.getJobs({
         page,
         limit,
-        query: searchQuery || undefined,
+        query: debouncedQuery || undefined,
         department: filterDept !== 'ALL' ? filterDept : undefined,
         status: filterStatus !== 'ALL' ? filterStatus : undefined,
         jobType: filterType !== 'ALL' ? filterType : undefined,
@@ -74,6 +83,7 @@ export function RecruiterJobs() {
       });
       return res;
     },
+    placeholderData: keepPreviousData,
   });
 
   const jobs = responseData?.data || [];
@@ -172,7 +182,7 @@ export function RecruiterJobs() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !responseData) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center text-slate-500">
         <RefreshCw className="w-8 h-8 animate-spin text-indigo-600 mb-2" />

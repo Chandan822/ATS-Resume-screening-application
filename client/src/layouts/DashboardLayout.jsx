@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { recruiterService } from '../services/recruiterService';
 import { useAuth } from '../hooks/useAuth';
 import NotificationCenter from '../components/NotificationCenter';
 import {
@@ -22,6 +24,13 @@ import {
   ShieldCheck,
   CheckCircle2,
   Bookmark,
+  MapPin,
+  Mail,
+  Phone,
+  Github,
+  Linkedin,
+  Globe,
+  X,
 } from 'lucide-react';
 
 export function DashboardLayout() {
@@ -33,6 +42,26 @@ export function DashboardLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  const [topSearch, setTopSearch] = useState('');
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+
+  const isRecruiter = user?.role === 'RECRUITER' || user?.role === 'ADMIN';
+  const { data: candidatesData } = useQuery({
+    queryKey: ['recruiterCandidatesSearch'],
+    queryFn: async () => {
+      const res = await recruiterService.getCandidates();
+      return res.data || [];
+    },
+    enabled: isRecruiter,
+  });
+
+  const matchingCandidates = topSearch.trim()
+    ? (candidatesData || []).filter((c) => {
+        const fullName = `${c.user?.firstName || ''} ${c.user?.lastName || ''}`.toLowerCase();
+        return fullName.includes(topSearch.toLowerCase());
+      }).slice(0, 5)
+    : [];
 
   const candidateNavItems = [
     { name: 'Job Openings', path: '/dashboard/jobs', icon: Briefcase },
@@ -184,15 +213,58 @@ export function DashboardLayout() {
           </div>
 
           {/* Center: Quick Search Bar Preview */}
-          <div className="hidden md:flex items-center max-w-sm w-full">
+          <div className="hidden md:flex items-center max-w-sm w-full relative">
             <div className="relative w-full">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search candidates, jobs, resumes..."
+                placeholder="Search candidates by name..."
+                value={topSearch}
+                onChange={(e) => setTopSearch(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
               />
             </div>
+
+            {/* Candidate Search Dropdown */}
+            {topSearch.trim() && isRecruiter && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setTopSearch('')} />
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl border border-slate-200 shadow-2xl p-2.5 z-50 space-y-1 text-xs text-slate-900 max-h-64 overflow-y-auto">
+                  <div className="px-2 py-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    Candidate Search Results
+                  </div>
+                  {matchingCandidates.length === 0 ? (
+                    <div className="p-4 text-center text-slate-400 font-semibold">
+                      No matching candidates found
+                    </div>
+                  ) : (
+                    matchingCandidates.map((cand) => (
+                      <button
+                        key={cand.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCandidate(cand);
+                          setTopSearch('');
+                        }}
+                        className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 text-left transition"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                          {cand.user?.firstName ? cand.user.firstName.charAt(0) : 'C'}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-900 truncate block">
+                            {cand.user?.firstName} {cand.user?.lastName}
+                          </span>
+                          <span className="text-[10px] text-indigo-600 font-bold block truncate">
+                            {cand.headline || 'Software Engineer'}
+                          </span>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Right: Notifications & User Avatar Dropdown */}
@@ -253,6 +325,117 @@ export function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* CANDIDATE DETAIL MODAL */}
+      {selectedCandidate && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 md:p-8 max-w-2xl w-full space-y-6 text-xs text-slate-900 relative my-8">
+            <button
+              onClick={() => setSelectedCandidate(null)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 bg-slate-100 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Profile Header */}
+            <div className="flex items-start gap-4 border-b border-slate-100 pb-4">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-extrabold text-2xl shadow-md shadow-indigo-600/10">
+                {selectedCandidate.user?.firstName ? selectedCandidate.user.firstName.charAt(0) : 'C'}
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-extrabold text-slate-900 text-lg leading-snug">
+                  {selectedCandidate.user?.firstName} {selectedCandidate.user?.lastName}
+                </h3>
+                <p className="text-indigo-600 font-bold text-xs uppercase tracking-wider">
+                  {selectedCandidate.headline || 'Software Engineer'}
+                </p>
+                <div className="flex items-center gap-3 text-slate-500 text-xs pt-1">
+                  <span className="flex items-center gap-0.5">
+                    <MapPin className="w-3.5 h-3.5" /> {selectedCandidate.currentLocation || 'Remote'}
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <Briefcase className="w-3.5 h-3.5" /> {selectedCandidate.totalExperienceYears || 0} Yrs Exp
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary */}
+            {selectedCandidate.summary && (
+              <div className="space-y-1">
+                <span className="font-bold text-slate-700 block text-xs">Professional Summary</span>
+                <p className="text-slate-600 leading-relaxed text-[11px] bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                  {selectedCandidate.summary}
+                </p>
+              </div>
+            )}
+
+            {/* Skills */}
+            {(selectedCandidate.candidateSkills || []).length > 0 && (
+              <div className="space-y-1.5">
+                <span className="font-bold text-slate-700 block text-xs">Core Skills</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedCandidate.candidateSkills.map((cs) => (
+                    <span
+                      key={cs.id}
+                      className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100 text-[10px]"
+                    >
+                      {cs.skill?.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Contact & Socials */}
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1 text-slate-600 text-xs">
+                <p className="flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-slate-400" /> {selectedCandidate.user?.email}
+                </p>
+                {selectedCandidate.user?.phone && (
+                  <p className="flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-slate-400" /> {selectedCandidate.user.phone}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {selectedCandidate.githubUrl && (
+                  <a
+                    href={selectedCandidate.githubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold inline-flex items-center gap-1.5 transition"
+                  >
+                    <Github className="w-4 h-4" /> GitHub
+                  </a>
+                )}
+                {selectedCandidate.linkedinUrl && (
+                  <a
+                    href={selectedCandidate.linkedinUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold inline-flex items-center gap-1.5 transition"
+                  >
+                    <Linkedin className="w-4 h-4" /> LinkedIn
+                  </a>
+                )}
+                {selectedCandidate.portfolioUrl && (
+                  <a
+                    href={selectedCandidate.portfolioUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold inline-flex items-center gap-1.5 transition"
+                  >
+                    <Globe className="w-4 h-4" /> Portfolio
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
