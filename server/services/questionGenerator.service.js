@@ -6,7 +6,7 @@ import { interviewQuestionKitSchema } from '../validators/interviewQuestion.vali
 /**
  * Fallback Heuristic Question Generator
  */
-export const fallbackQuestionGenerator = (candidateName = 'Candidate', jobTitle = 'Software Engineer') => {
+export const fallbackQuestionGenerator = (_candidateName = 'Candidate', jobTitle = 'Software Engineer') => {
   return {
     technical: [
       {
@@ -90,6 +90,12 @@ ${resumeText || 'Full Stack Engineer with React and Node.js experience'}
 Job Requisition:
 """
 ${jobDescription || 'Senior Software Engineer'}
+"""
+
+Candidate Context:
+"""
+Name: ${candidateName || 'Candidate'}
+Experience: ${candidateExperience || 'Not provided'}
 """
 
 Generate JSON matching this exact structure with Technical, Behavioral, and Coding questions, tagging each question with difficulty ("EASY", "MEDIUM", or "HARD"):

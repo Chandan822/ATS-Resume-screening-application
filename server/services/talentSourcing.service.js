@@ -1,6 +1,6 @@
 import prisma from '../config/db.js';
-import { generateTextEmbedding } from '../utils/embeddingGenerator.js';
-import { calculateCosineSimilarity } from './semanticMatcher.service.js';
+import { compareEntities } from './embedding.service.js';
+import { buildJobEmbeddingText } from './semanticMatcher.service.js';
 
 /**
  * Recommend candidates from talent pool database for a job requisition
@@ -33,10 +33,6 @@ export const recommendCandidatesForJob = async (jobId) => {
     return { jobId, totalCandidatesFound: 0, recommendations: [] };
   }
 
-  // Generate job embedding vector for semantic matching
-  const jobText = `${job.title} ${job.department || ''} ${job.description} ${job.requirements || ''}`;
-  const jobVector = await generateTextEmbedding(jobText);
-
   const requiredExpMin = job.experienceMinLevel || 2;
   const requiredSkills = job.jobSkills.map((js) => js.skill.name.toLowerCase());
 
@@ -46,9 +42,22 @@ export const recommendCandidatesForJob = async (jobId) => {
       const latestResume = candidate.resumeFiles?.[0]?.versions?.[0];
       const resumeText = latestResume?.parsedText || `${candidate.headline || ''} ${candidate.summary || ''}`;
 
-      // 1. Semantic Similarity (30%)
-      const candidateVector = await generateTextEmbedding(resumeText);
-      const rawCosine = calculateCosineSimilarity(jobVector, candidateVector);
+      // 1. Semantic Similarity (30%). The provider is selected for the pair,
+      // so this path cannot compare vectors from different embedding spaces.
+      let rawCosine = 0.5;
+      if (latestResume) {
+        const comparison = await compareEntities(
+          { type: 'job', id: job.id, text: buildJobEmbeddingText(job), updatedAt: job.updatedAt },
+          {
+            type: 'resume',
+            id: latestResume.id,
+            candidateId: candidate.id,
+            text: resumeText,
+            updatedAt: latestResume.updatedAt,
+          },
+        );
+        rawCosine = comparison.similarity;
+      }
       const semanticScore = Math.round(rawCosine * 100);
 
       // 2. Experience Score (20%)

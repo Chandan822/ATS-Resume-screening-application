@@ -147,11 +147,11 @@ export const verifyEmail = async (req, res, next) => {
 export const getMe = async (req, res) => {
   // Strip sensitive fields before returning to client
   const {
-    passwordHash,
-    emailVerificationToken,
-    emailVerificationExpires,
-    passwordResetToken,
-    passwordResetExpires,
+    passwordHash: _passwordHash,
+    emailVerificationToken: _emailVerificationToken,
+    emailVerificationExpires: _emailVerificationExpires,
+    passwordResetToken: _passwordResetToken,
+    passwordResetExpires: _passwordResetExpires,
     ...user
   } = req.user;
 

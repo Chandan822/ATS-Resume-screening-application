@@ -513,8 +513,15 @@ model Embedding {
   candidateId     String?
   jobId           String?
   resumeVersionId String?
-  vector          Unsupported("vector(1536)")?
-  modelName       String              @default("text-embedding-3-small")
+  // Unbounded pgvector allows HF/ST (384) and legacy/Gemini padded storage
+  // vectors to coexist. `dimension` records model output; compatibility is
+  // determined by provider/model/version plus dimension, never dimension alone.
+  vector          Unsupported("vector")?
+  provider        String?
+  modelName       String?
+  modelVersion    String?
+  dimension       Int?
+  textHash        String?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
@@ -526,6 +533,8 @@ model Embedding {
   @@index([entityType])
   @@index([candidateId])
   @@index([jobId])
+  @@index([provider, modelName, modelVersion])
+  @@index([textHash])
   @@map("embeddings")
 }
 

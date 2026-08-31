@@ -35,11 +35,11 @@ const generateRefreshToken = () => {
  */
 const sanitizeUser = (user) => {
   const {
-    passwordHash,
-    emailVerificationToken,
-    emailVerificationExpires,
-    passwordResetToken,
-    passwordResetExpires,
+    passwordHash: _passwordHash,
+    emailVerificationToken: _emailVerificationToken,
+    emailVerificationExpires: _emailVerificationExpires,
+    passwordResetToken: _passwordResetToken,
+    passwordResetExpires: _passwordResetExpires,
     ...sanitized
   } = user;
   return sanitized;

@@ -9,7 +9,7 @@ The backend application is an **Express** server serving REST API endpoints, han
 * **Database & ORM**: PostgreSQL, Prisma.
 * **File Uploads**: Multer.
 * **Text Extraction**: `mammoth` (DOCX), `pdf-parse` (PDF).
-* **AI Engine**: `@google/generative-ai` (Gemini API for text generation and embeddings).
+* **AI Engine**: Hugging Face Inference API embeddings, local Python `sentence-transformers` fallback, and Gemini embeddings for existing/new compatible vectors.
 * **Real-time**: `socket.io` for WebSockets notification push.
 
 ---
@@ -45,7 +45,41 @@ DATABASE_URL=postgresql://username:password@localhost:5432/ai_ats_db?schema=publ
 JWT_SECRET=your_jwt_secret_key
 REFRESH_TOKEN_SECRET=your_refresh_token_secret_key
 GEMINI_API_KEY=your_google_gemini_api_key
+HF_API_KEY=your_hugging_face_token
+HF_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+LOCAL_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+GEMINI_EMBEDDING_MODEL=text-embedding-004
 ```
+
+## Embedding Spaces
+
+All semantic comparisons are resolved as a pair through `services/embedding.service.js`.
+The service first reuses a common compatible space, in this order: Hugging Face,
+local Sentence Transformers, then Gemini. If none exists, it tries to create the
+missing pair in that same order. Provider, model, model version, vector dimension,
+and a source-text SHA-256 hash are stored with every new vector; incompatible vectors
+are rejected before cosine similarity is calculated.
+
+Existing rows named `gemini-text-embedding-004` are retained as known legacy Gemini
+vectors. Other rows without reliable metadata are treated as legacy/unknown and are
+not compared until a fresh compatible embedding is created.
+
+Run the schema migration before deploying this version:
+
+```bash
+npx prisma migrate deploy
+```
+
+For Render, install the local fallback before starting Node (the worker loads once and
+runs on CPU):
+
+```bash
+pip install -r server/requirements.txt && cd server && npm ci && npx prisma migrate deploy
+```
+
+Set `HF_API_KEY` only on the backend service. If the HF free allowance, network, or
+provider is unavailable, the comparison falls back to the local worker; Gemini remains
+the final compatible-provider fallback.
 
 ### 2. Available Scripts
 Inside the `server/` directory:

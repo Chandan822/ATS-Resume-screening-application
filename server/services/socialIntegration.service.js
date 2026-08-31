@@ -1,5 +1,4 @@
 import * as candidateRepo from '../repositories/candidate.repository.js';
-import prisma from '../config/db.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const KNOWN_SKILLS = [
@@ -19,7 +18,7 @@ export const extractSkillsFromText = (text) => {
   const extracted = new Set();
   
   for (const skill of KNOWN_SKILLS) {
-    const escapedSkill = skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const escapedSkill = skill.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
     const regex = new RegExp(`\\b${escapedSkill}\\b`, 'gi');
     if (regex.test(lowerText)) {
       extracted.add(skill.toUpperCase());
@@ -309,4 +308,3 @@ export const mergeSocialDataToCandidateProfile = async (userId, { githubData }) 
     mergedHeadline: candidate.headline,
   };
 };
-

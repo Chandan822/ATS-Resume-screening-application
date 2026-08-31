@@ -12,11 +12,10 @@ export const cleanExtractedText = (text) => {
   return text
     // Replace non-breaking space with standard space
     .replace(/\u00A0/g, ' ')
-    // Remove control characters except newlines and tabs
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '')
     // Normalize Windows line breaks
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
+    .replace(/\r\n?/g, '\n')
+    // Remove control characters except newlines and tabs
+    .replace(/\p{Cc}/gu, (character) => (character === '\n' || character === '\t' ? character : ''))
     // Collapse 3+ consecutive newlines into double newlines
     .replace(/\n{3,}/g, '\n\n')
     // Trim leading/trailing whitespace
