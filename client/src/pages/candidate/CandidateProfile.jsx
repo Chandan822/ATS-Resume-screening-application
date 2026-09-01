@@ -170,6 +170,9 @@ export function CandidateProfile() {
   const uploadResumeMut = useMutation({
     mutationFn: (file) => candidateService.uploadResume(file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateProfile'] }),
+    onError: (error) => {
+      alert(error.response?.data?.message || 'Resume upload and profile extraction failed.');
+    },
   });
 
   const deleteResumeMut = useMutation({
@@ -730,7 +733,7 @@ export function CandidateProfile() {
             <label className="flex flex-col items-center justify-center p-8 rounded-3xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition cursor-pointer text-center space-y-2">
               <UploadCloud className="w-8 h-8 text-indigo-600" />
               <span className="text-xs font-bold text-indigo-900">
-                {uploadResumeMut.isPending ? 'Processing & Extracting Text...' : 'Click to upload or drag & drop resume PDF / DOCX'}
+                {uploadResumeMut.isPending ? 'Uploading, parsing & updating profile...' : 'Click to upload or drag & drop resume PDF / DOCX'}
               </span>
               <span className="text-[11px] text-slate-500">Supported Formats: .pdf, .docx (Max 10MB)</span>
               <input
@@ -757,6 +760,16 @@ export function CandidateProfile() {
                     {uploadResumeMut.data.data?.wordCount || 0} Words &bull; {uploadResumeMut.data.data?.charCount || 0} Characters
                   </span>
                 </div>
+                {uploadResumeMut.data.data?.profileAutofill && (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900">
+                    <span className="font-extrabold">Profile updated from this resume.</span>{' '}
+                    Added {uploadResumeMut.data.data.profileAutofill.skillsAdded?.length || 0} skills,{' '}
+                    {uploadResumeMut.data.data.profileAutofill.experienceAdded?.length || 0} experience records,{' '}
+                    {uploadResumeMut.data.data.profileAutofill.educationAdded?.length || 0} education records,{' '}
+                    {uploadResumeMut.data.data.profileAutofill.projectAdded?.length || 0} projects, and{' '}
+                    {uploadResumeMut.data.data.profileAutofill.certificatesAdded?.length || 0} certificates.
+                  </div>
+                )}
                 <div className="p-3 bg-white rounded-xl border border-indigo-100 max-h-48 overflow-y-auto text-[11px] text-slate-700 font-mono leading-relaxed whitespace-pre-wrap">
                   {uploadResumeMut.data.data?.extractedText || 'No text extracted.'}
                 </div>
@@ -803,7 +816,7 @@ export function CandidateProfile() {
                           className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          {parseAiMut.isPending ? 'Parsing...' : 'Parse with AI'}
+                          {parseAiMut.isPending ? 'Parsing...' : 'Re-parse & Update Profile'}
                         </button>
                         <button
                           onClick={() => deleteResumeMut.mutate(resFile.id)}

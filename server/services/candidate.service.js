@@ -176,9 +176,20 @@ export const uploadResumeFile = async (userId, file) => {
     extractedText
   );
 
+  // Parse immediately after upload and merge the structured result into the
+  // candidate profile. The explicit Parse with AI action uses the same path.
+  const parsedData = await parseResumeTextWithAI(extractedText);
+  const profileAutofill = await candidateRepo.applyParsedResumeData({
+    candidateId: candidate.id,
+    resumeVersionId: resumeVersion.id,
+    parsedData,
+  });
+
   return {
     resumeFile,
     resumeVersion,
+    parsedData,
+    profileAutofill,
     extractedText,
     charCount: extractedText.length,
     wordCount: extractedText ? extractedText.split(/\s+/).filter(Boolean).length : 0,
@@ -204,18 +215,17 @@ export const parseResumeWithAI = async (userId, resumeFileId) => {
   // Parse structured JSON using Gemini API with retry and fallback
   const structuredData = await parseResumeTextWithAI(resumeVersion.parsedText);
 
-  // Store JSON in ResumeVersion.parsedData
-  await candidateRepo.updateResumeVersionParsedData(resumeVersion.id, structuredData);
-
-  // Auto-fill candidate summary & headline if missing
-  if (structuredData.summary && (!candidate.summary || candidate.summary.trim() === '')) {
-    await candidateRepo.updateCandidateProfile(candidate.id, { summary: structuredData.summary });
-  }
+  const profileAutofill = await candidateRepo.applyParsedResumeData({
+    candidateId: candidate.id,
+    resumeVersionId: resumeVersion.id,
+    parsedData: structuredData,
+  });
 
   return {
     resumeFileId,
     resumeVersionId: resumeVersion.id,
     parsedData: structuredData,
+    profileAutofill,
   };
 };
 

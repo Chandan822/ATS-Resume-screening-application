@@ -1,4 +1,13 @@
 import prisma from '../config/db.js';
+import {
+  calculateResumeExperienceYears,
+  isUsefulResumeValue,
+  mergeResumeLanguages,
+  normalizeResumeKey,
+  normalizeResumeValue,
+  parseResumeDate,
+  uniqueResumeValues,
+} from '../utils/resumeProfileMapper.js';
 
 export const findCandidateByUserId = async (userId) => {
   let candidate = await prisma.candidate.findUnique({
@@ -41,6 +50,207 @@ export const updateCandidateProfile = async (candidateId, profileData) => {
   return prisma.candidate.update({
     where: { id: candidateId },
     data: profileData,
+  });
+};
+
+/**
+ * Persist structured resume data into the candidate profile without replacing
+ * values the candidate already entered or data merged from GitHub.
+ */
+export const applyParsedResumeData = async ({ candidateId, resumeVersionId, parsedData }) => {
+  return prisma.$transaction(async (tx) => {
+    const candidate = await tx.candidate.findUnique({
+      where: { id: candidateId },
+      include: {
+        user: true,
+        educations: true,
+        experiences: true,
+        projects: true,
+        certificates: true,
+        candidateSkills: { include: { skill: true } },
+      },
+    });
+
+    if (!candidate) throw new Error('Candidate profile not found');
+
+    await tx.resumeVersion.update({
+      where: { id: resumeVersionId },
+      data: { parsedData },
+    });
+
+    const profileData = {};
+    const profileFieldsUpdated = [];
+    const firstExperience = parsedData?.experience?.find((experience) => isUsefulResumeValue(experience?.jobTitle));
+
+    if (!isUsefulResumeValue(candidate.headline) && isUsefulResumeValue(firstExperience?.jobTitle)) {
+      profileData.headline = normalizeResumeValue(firstExperience.jobTitle);
+    }
+    if (!isUsefulResumeValue(candidate.summary) && isUsefulResumeValue(parsedData?.summary)) {
+      profileData.summary = normalizeResumeValue(parsedData.summary);
+    }
+    if (!isUsefulResumeValue(candidate.currentLocation) && isUsefulResumeValue(parsedData?.location)) {
+      profileData.currentLocation = normalizeResumeValue(parsedData.location);
+    }
+
+    const calculatedExperienceYears = calculateResumeExperienceYears(parsedData?.experience || []);
+    if ((!candidate.totalExperienceYears || candidate.totalExperienceYears <= 0) && calculatedExperienceYears > 0) {
+      profileData.totalExperienceYears = calculatedExperienceYears;
+    }
+
+    const mergedLanguages = mergeResumeLanguages(candidate.languages, parsedData?.languages || []);
+    if (mergedLanguages.length > 0) profileData.languages = mergedLanguages;
+
+    if (Object.keys(profileData).length > 0) {
+      await tx.candidate.update({ where: { id: candidate.id }, data: profileData });
+      profileFieldsUpdated.push(...Object.keys(profileData));
+    }
+
+    if (!isUsefulResumeValue(candidate.user.phone) && isUsefulResumeValue(parsedData?.phone)) {
+      await tx.user.update({
+        where: { id: candidate.user.id },
+        data: { phone: normalizeResumeValue(parsedData.phone) },
+      });
+      profileFieldsUpdated.push('phone');
+    }
+
+    const existingSkillKeys = new Set(
+      (candidate.candidateSkills || []).map((candidateSkill) => normalizeResumeKey(candidateSkill.skill.name))
+    );
+    const skillsAdded = [];
+
+    for (const skillName of uniqueResumeValues(parsedData?.skills || [])) {
+      const skillKey = normalizeResumeKey(skillName);
+      if (existingSkillKeys.has(skillKey)) continue;
+
+      let skill = await tx.skill.findFirst({
+        where: { name: { equals: skillName, mode: 'insensitive' } },
+      });
+      if (!skill) {
+        skill = await tx.skill.create({ data: { name: skillName, category: 'TECHNICAL' } });
+      }
+
+      await tx.candidateSkill.upsert({
+        where: { candidateId_skillId: { candidateId: candidate.id, skillId: skill.id } },
+        update: {},
+        create: {
+          candidateId: candidate.id,
+          skillId: skill.id,
+          yearsOfExperience: calculatedExperienceYears || 1,
+          proficiencyLevel: 'INTERMEDIATE',
+        },
+      });
+      existingSkillKeys.add(skillKey);
+      skillsAdded.push(skillName);
+    }
+
+    const educationAdded = [];
+    for (const education of parsedData?.education || []) {
+      const institution = normalizeResumeValue(education?.institution);
+      const degree = normalizeResumeValue(education?.degree);
+      const startDate = parseResumeDate(education?.startDate);
+      if (!isUsefulResumeValue(institution) || !isUsefulResumeValue(degree) || !startDate) continue;
+
+      const duplicate = candidate.educations.some(
+        (existing) =>
+          normalizeResumeKey(existing.institution) === normalizeResumeKey(institution) &&
+          normalizeResumeKey(existing.degree) === normalizeResumeKey(degree) &&
+          existing.startDate.getTime() === startDate.getTime()
+      );
+      if (duplicate) continue;
+
+      await tx.education.create({
+        data: {
+          candidateId: candidate.id,
+          institution,
+          degree,
+          fieldOfStudy: isUsefulResumeValue(education?.fieldOfStudy) ? normalizeResumeValue(education.fieldOfStudy) : null,
+          startDate,
+          endDate: parseResumeDate(education?.endDate),
+        },
+      });
+      educationAdded.push({ institution, degree });
+    }
+
+    const experienceAdded = [];
+    for (const experience of parsedData?.experience || []) {
+      const companyName = normalizeResumeValue(experience?.companyName);
+      const jobTitle = normalizeResumeValue(experience?.jobTitle);
+      const startDate = parseResumeDate(experience?.startDate);
+      if (!isUsefulResumeValue(companyName) || !isUsefulResumeValue(jobTitle) || !startDate) continue;
+
+      const duplicate = candidate.experiences.some(
+        (existing) =>
+          normalizeResumeKey(existing.companyName) === normalizeResumeKey(companyName) &&
+          normalizeResumeKey(existing.jobTitle) === normalizeResumeKey(jobTitle) &&
+          existing.startDate.getTime() === startDate.getTime()
+      );
+      if (duplicate) continue;
+
+      await tx.experience.create({
+        data: {
+          candidateId: candidate.id,
+          companyName,
+          jobTitle,
+          location: isUsefulResumeValue(experience?.location) ? normalizeResumeValue(experience.location) : null,
+          startDate,
+          endDate: parseResumeDate(experience?.endDate),
+          isCurrentJob: Boolean(experience?.isCurrentJob),
+          description: isUsefulResumeValue(experience?.description) ? normalizeResumeValue(experience.description) : null,
+        },
+      });
+      experienceAdded.push({ companyName, jobTitle });
+    }
+
+    const projectAdded = [];
+    for (const project of parsedData?.projects || []) {
+      const title = normalizeResumeValue(project?.title);
+      if (!isUsefulResumeValue(title)) continue;
+
+      const duplicate = candidate.projects.some((existing) => normalizeResumeKey(existing.title) === normalizeResumeKey(title));
+      if (duplicate) continue;
+
+      await tx.project.create({
+        data: {
+          candidateId: candidate.id,
+          title,
+          description: isUsefulResumeValue(project?.description) ? normalizeResumeValue(project.description) : null,
+          projectUrl: isUsefulResumeValue(project?.projectUrl) ? normalizeResumeValue(project.projectUrl) : null,
+          githubUrl: isUsefulResumeValue(project?.githubUrl) ? normalizeResumeValue(project.githubUrl) : null,
+          startDate: parseResumeDate(project?.startDate),
+          endDate: parseResumeDate(project?.endDate),
+        },
+      });
+      projectAdded.push(title);
+    }
+
+    const certificatesAdded = [];
+    for (const certificate of uniqueResumeValues(parsedData?.certifications || [])) {
+      const duplicate = candidate.certificates.some(
+        (existing) => normalizeResumeKey(existing.name) === normalizeResumeKey(certificate)
+      );
+      if (duplicate) continue;
+
+      await tx.certificate.create({
+        data: {
+          candidateId: candidate.id,
+          name: certificate,
+          issuingOrganization: 'Resume',
+        },
+      });
+      certificatesAdded.push(certificate);
+    }
+
+    return {
+      profileFieldsUpdated,
+      skillsAdded,
+      educationAdded,
+      experienceAdded,
+      projectAdded,
+      certificatesAdded,
+    };
+  }, {
+    maxWait: 10000,
+    timeout: 30000,
   });
 };
 

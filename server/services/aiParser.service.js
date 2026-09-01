@@ -102,6 +102,7 @@ Return JSON matching this exact structure:
     {
       "companyName": "string",
       "jobTitle": "string",
+      "location": "string or null",
       "startDate": "YYYY-MM or string or null",
       "endDate": "YYYY-MM or string or null",
       "isCurrentJob": boolean,
@@ -121,7 +122,8 @@ Return JSON matching this exact structure:
     {
       "title": "string",
       "description": "string or null",
-      "projectUrl": "string or null"
+      "projectUrl": "string or null",
+      "githubUrl": "string or null"
     }
   ],
   "languages": ["array of strings"],

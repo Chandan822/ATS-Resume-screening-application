@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const parsedExperienceSchema = z.object({
   companyName: z.string().default('Unknown Company'),
   jobTitle: z.string().default('Role'),
+  location: z.string().nullable().optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   isCurrentJob: z.boolean().default(false),
@@ -21,6 +22,7 @@ export const parsedProjectSchema = z.object({
   title: z.string().default('Project'),
   description: z.string().nullable().optional(),
   projectUrl: z.string().nullable().optional(),
+  githubUrl: z.string().nullable().optional(),
 });
 
 export const aiParsedResumeSchema = z.object({
